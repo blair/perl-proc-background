@@ -1,4 +1,4 @@
-Package Proc::Background Version 1.05
+Package Proc::Background Version 1.06
 
 This is the Proc::Background package.  It provides a generic interface
 to running background processes.  Through this interface, users can
@@ -8,43 +8,48 @@ this package create new Proc::Background objects that provide an
 object oriented interface to process management.  The following
 methods are provided to users of the Proc::Background package:
 
-	new:        start a new background process.
-	alive:      test to see if the process is still alive.
-	die:        reliably try to kill the process.
-	wait:       wait for the process to exit and return the exit status.
-	start_time: return the time that the process started.
-	end_time:   return the time when the exit status was retrieved.
+    new:        start a new background process.
+    alive:      test to see if the process is still alive.
+    die:        reliably try to kill the process.
+    wait:       wait for the process to exit and return the exit status.
+    start_time: return the time that the process started.
+    end_time:   return the time when the exit status was retrieved.
 
 A generic function, timed-system, is also included that lets a
 background process run for a specified amount of time, and if the
 process did not exit, then the process is killed.
-
-This package currently works on both Unix and Win32 platforms.  Users
-of this package on Win32 systems needs to install the libwin32-?.??
-package by Gurusamy Sarathy (gsar@umich.edu) available from CPAN.
-Recent installations of ActiveState Perl already include this module,
-so it does not need to be installed.
 
 AVAILABILITY
 
 The latest version of this package is available from a CPAN
 archive near you in
 
-    CPAN/authors/id/B/BZ/BZAJAC/
+    http://www.perl.com/CPAN/authors/id/B/BZ/BZAJAC/
 
 INSTALLATION
 
 In order to use this package you will need Perl version 5.004_04 or
 better.
 
-If you are running on a Windows 95/98/NT/2000 and if the Perl
-installation does not have the libwin32 package installed, then check
-to see if your Perl installation has libwin32 already installed.  You
-can do this by running the normal installation procedure.  If libwin32
-is not installed, then the first step will fail.  You can get the
-latest libwin32-x.x package from CPAN available as
-CPAN/authors/id/GSAR/libwin32-x.x.zip or
-CPAN/authors/id/GSAR/libwin32-x.x.tar.gz.
+On Win32 systems Proc::Background requires the Win32::Process module.
+To check if your Perl has Win32::Process installed on it, run
+
+    perl Makefile.PL
+
+If this command does not complain about missing Win32::Process, then
+you have the module installed.  If you receive an error message, you
+can do two things to resolve this.  If you have not performed
+extensive customization and installation of modules into your Perl,
+the easier path is to upgrade to the latest version of ActiveState
+Perl at
+
+    http://aspn.activestate.com/ASPN/Downloads/ActivePerl/
+
+which includes Win32::Process.  If you want to use your current Perl
+installation, then download the latest version of the libwin32 package
+by Gurusamy Sarathy available at:
+
+    http://www.perl.com/CPAN/authors/id/GSAR/
 
 Once that is completed, you install Proc::Background as you would
 install any perl module library, by running these commands:

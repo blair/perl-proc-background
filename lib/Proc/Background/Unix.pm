@@ -1,6 +1,6 @@
 # Proc::Background::Unix: Unix interface to background process management.
 #
-# Copyright (C) 1998-2001 Blair Zajac.
+# Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.
 
 package Proc::Background::Unix;
 
@@ -13,7 +13,7 @@ use POSIX qw(:errno_h :sys_wait_h);
 
 use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = sprintf '%d.%02d', '$Revision: 1.05 $' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf '%d.%02d', '$Revision: 1.06 $' =~ /(\d+)\.(\d+)/;
 
 # Start the background process.  If it is started sucessfully, then record
 # the process id in $self->{_os_obj}.

@@ -1,3 +1,24 @@
+Sat Sep  8 12:20:01 PDT 2001 <blair@orcaware.com> Blair Zajac
+
+	* Release version 1.06.
+
+Sat Sep  8 12:19:39 PDT 2001 <blair@orcaware.com> Blair Zajac
+
+	* t/01proc.t: On Cygwin test 46 fails intermittently when it
+	  tries to see if the spawned process is running by using
+	  kill(0, $pid).  It's not clear why this would happen, but
+	  sometimes kill returns 0, even though the process should be
+	  running.  Maybe it's the Cygwin layer that is causing the
+	  problem.  Adding a one second sleep before calling kill
+	  seems to cause the test to pass.
+	* t/sleep_exit.t: The sleep argument was being set to 1 even
+	  if the command line argument was 0 because $sleep was
+	  checked for trueness, not if it was defined.  Now check
+	  $sleep and $exit_status for being defined before setting
+	  them.
+	* README: Update the instructions for checking and installing
+	  Win32::Process for Perl on Windows.
+
 Tue Aug 28 12:54:44 PDT 2001 <blair@orcaware.com> Blair Zajac
 
 	* Release version 1.05.

@@ -1,6 +1,6 @@
 # Proc::Background::Win32 Windows interface to background process management.
 #
-# Copyright (C) 1998-2001 Blair Zajac.
+# Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.
 
 package Proc::Background::Win32;
 
@@ -12,7 +12,7 @@ use Carp;
 
 use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = sprintf '%d.%02d', '$Revision: 1.05 $' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf '%d.%02d', '$Revision: 1.06 $' =~ /(\d+)\.(\d+)/;
 
 BEGIN {
   eval "use Win32::Process";

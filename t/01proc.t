@@ -132,7 +132,7 @@ ok($a[0]);							# 23
 ok($a[1] == 1);							# 24
 
 # Test the code to find a program if the path to it is not absolute.
-my $p4 = EmptySubclass->new('perl', '-w', $sleep_exit, 0, 0);
+my $p4 = EmptySubclass->new(@sleep_exit, 0, 0);
 ok($p4);							# 25
 if ($p4) {
   ok($p4->pid);							# 26
@@ -183,7 +183,7 @@ ok($result[2] ==   0);						# 41
 
 # Test the ability to pass options to Proc::Background::new.
 my %options;
-my $p6 = EmptySubclass->new(\%options, 'perl', '-w', $sleep_exit, 0, 43);
+my $p6 = EmptySubclass->new(\%options, @sleep_exit, 0, 43);
 ok($p6);							# 42
 if ($p6) {
   ok(($p6->wait >> 8) == 43);					# 43
@@ -195,12 +195,12 @@ if ($p6) {
 # Proc::Background object goes out of scope.
 $options{die_upon_destroy} = 1;
 {
-  my $pid;
-  my $p7 = EmptySubclass->new(\%options, 'perl', '-w', $sleep_exit, 99999, 98);
+  my $p7 = EmptySubclass->new(\%options, @sleep_exit, 99999, 98);
   ok($p7);							# 44
   if ($p7) {
     my $pid = $p7->pid;
     ok(defined $pid);						# 45
+    sleep 1;
     ok(kill(0, $pid) == 1);					# 46
     $p7 = undef;
     sleep 1;
