@@ -1,6 +1,6 @@
 # Proc::Background: Generic interface to background process management.
 #
-# Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.
+# Copyright (C) 1998-2005 Blair Zajac.  All rights reserved.
 
 package Proc::Background;
 
@@ -470,7 +470,7 @@ Blair Zajac <blair@orcaware.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.  This
+Copyright (C) 1998-2005 Blair Zajac.  All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 

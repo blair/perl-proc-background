@@ -29,7 +29,7 @@ from a CPAN (Comprehensive Perl Archive Network) archive near you in
 The latest beta version of this package is hosted in a Subversion
 repository located at
 
-    http://svn.orcaware.com:8000/repos/trunk/perl_proc_background/
+    http://www.orcaware.com/svn/repos/trunk/perl_proc_background/
 
 Subversion is an open-source source code management system designed to
 replace CVS.  To get Subversion, see
@@ -96,6 +96,6 @@ utility to extract documentation from the module files directly.
 
 COPYRIGHT
 
-Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.  This
+Copyright (C) 1998-2005 Blair Zajac.  All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
