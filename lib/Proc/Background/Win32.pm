@@ -12,7 +12,7 @@ use Carp;
 
 use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.04 $, 10;
+$VERSION = sprintf '%d.%02d', '$Revision: 1.05 $' =~ /(\d+)\.(\d+)/;
 
 BEGIN {
   eval "use Win32::Process";

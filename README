@@ -1,4 +1,4 @@
-Package Proc::Background Version 1.04
+Package Proc::Background Version 1.05
 
 This is the Proc::Background package.  It provides a generic interface
 to running background processes.  Through this interface, users can
@@ -77,6 +77,6 @@ utility to extract documentation from the module files directly.
 
 COPYRIGHT
 
-Copyright (C) 1998-2001 Blair Zajac. All rights reserved.  This
+Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

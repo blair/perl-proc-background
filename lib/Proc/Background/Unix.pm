@@ -13,7 +13,7 @@ use POSIX qw(:errno_h :sys_wait_h);
 
 use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.04 $, 10;
+$VERSION = sprintf '%d.%02d', '$Revision: 1.05 $' =~ /(\d+)\.(\d+)/;
 
 # Start the background process.  If it is started sucessfully, then record
 # the process id in $self->{_os_obj}.

@@ -1,3 +1,27 @@
+Tue Aug 28 12:54:44 PDT 2001 <blair@orcaware.com> Blair Zajac
+
+	* Release version 1.05.
+
+Tue Aug 28 12:34:15 PDT 2001 <blair@orcaware.com> Blair Zajac
+
+	* lib/Proc/Background.pm: The $VERSION variable was being set
+	  using
+
+	  $VERSION = substr q$Revision: 1.05 $, 10;'
+
+	  which did not properly set $VERSION to a numeric value in
+	  Perl 5.6.1 probably due to the trailing ' ' character after
+	  the number.  This resulted in 'use Proc::Background
+	  1.04' failing to force Perl to use version 1.04 or newer of
+	  Proc::Background even if 1.03 or older was installed because
+	  $VERSION was set using substr and Perl would not consider
+	  $VERSION to be set.  Now use the longer but effective:
+
+	  $VERSION = sprintf '%d.%02d', '$Revision: 1.05 $' =~ /(\d+)\.(\d+)/;
+
+	* lib/Proc/Background/Unix.pm: Ditto.
+	* lib/Proc/Background/Win32.pm: Ditto.
+
 Thu Aug 16 14:36:39 PDT 2001 <blair@orcaware.com> Blair Zajac
 
 	* Release version 1.04.
@@ -35,8 +59,8 @@ Thu Aug 16 13:30:23 PDT 2001 <blair@orcaware.com> Blair Zajac
 
 Tue Aug 14 22:50:14 PDT 2001 <blair@orcaware.com> Blair Zajac
 
-	* lib/Proc/Background/Win32.pm: Remove an unnessary loop label
-	  in _die.
+	* lib/Proc/Background/Win32.pm: Remove an unnecessary loop
+	  label in _die.
 	* lib/Proc/Background.pm: Update the documentation to be
 	  clearer.
 	* README: Remove the reference to my FTP site, as it is no
