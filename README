@@ -1,4 +1,4 @@
-Package Proc::Background Version 1.03
+Package Proc::Background Version 1.04
 
 This is the Proc::Background package.  It provides a generic interface
 to running background processes.  Through this interface, users can
@@ -31,10 +31,6 @@ The latest version of this package is available from a CPAN
 archive near you in
 
     CPAN/authors/id/B/BZ/BZAJAC/
-
-or at
-
-    ftp://ftp.gps.caltech.edu/pub/blair/Perl/
 
 INSTALLATION
 

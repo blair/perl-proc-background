@@ -7,13 +7,13 @@ package Proc::Background::Unix;
 require 5.004_04;
 
 use strict;
-use vars qw(@ISA $VERSION);
 use Exporter;
-use Carp qw(cluck croak);
+use Carp;
 use POSIX qw(:errno_h :sys_wait_h);
 
+use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.03 $, 10;
+$VERSION = substr q$Revision: 1.04 $, 10;
 
 # Start the background process.  If it is started sucessfully, then record
 # the process id in $self->{_os_obj}.
@@ -21,8 +21,7 @@ sub _new {
   my $class = shift;
 
   unless (@_ > 0) {
-    cluck "$class::_new called with insufficient number of arguments";
-    return;
+    confess "Proc::Background::Unix::_new called with insufficient number of arguments";
   }
 
   return unless $_[0];
@@ -128,7 +127,7 @@ I<Proc::Background> class.  See L<Proc::Background> for more information.
 
 =head1 AUTHOR
 
-Blair Zajac <blair@gps.caltech.edu>
+Blair Zajac <blair@orcaware.com>
 
 =head1 COPYRIGHT
 

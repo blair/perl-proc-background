@@ -38,7 +38,7 @@ was killed.
 =cut
 
 use strict;
-use Proc::Background 1.03 qw(timeout_system);
+use Proc::Background 1.04 qw(timeout_system);
 use Getopt::Long;
 
 $0 =~ s:.*/::;

@@ -1,113 +1,154 @@
-Sun Feb  4 13:54:37 PST 2001 <blair@akamai.com> (Blair Zajac)
+Thu Aug 16 14:36:39 PDT 2001 <blair@orcaware.com> Blair Zajac
 
-        Release version 1.03.
+	* Release version 1.04.
 
-Sun Feb  4 11:50:15 PST 2001 <blair@akamai.com> (Blair Zajac)
+Thu Aug 16 14:29:14 PDT 2001 <blair@orcaware.com> Blair Zajac
 
-	Add a new command line option to timed-process, -e, that takes
-	an integer argument.  This value sets the exit value
-	timed-process uses for its exit call when it has to kill the
-	given program because the timeout elapsed.  This value is not
-	used if the process exits before the timeout expires.
+	* lib/Proc/Background.pm: When new is passed an incorrect
+	  number of arguments, do confess using the class passed to
+	  new, rather use the hardwired Proc::Background class which
+	  will make error messages easier to understand since module
+	  complaining about the error will be the correct one.
+	* lib/Proc/Background/Unix.pm: Ditto, except for _new, not
+	  new.
+	* lib/Proc/Background/Win32.pm: Ditto, except for _new, not
+	  new.
 
-	Add tests for for the timed-process script in t/01proc.t.
+Thu Aug 16 14:00:41 PDT 2001 <blair@orcaware.com> Blair Zajac
 
-Sat Feb  3 14:21:32 PST 2001 <blair@akamai.com> (Blair Zajac)
+	* lib/Proc/Background.pm: Proc::Background::new can accept a
+	  reference to a hash as its first argument which contains
+	  key/value pairs to modify Proc::Background's behavior.
+	  Currently the only key understood is `die_upon_destroy'
+	  which has the process killed via die() when the
+	  Proc::Background object is being DESTROY'ed.
+	* t/01proc.t: Add tests to test the new options behavior.
 
-	Change all occurrences of Proc::Generic, which was the
-	original name of this module, with Proc::Background in every
-	file in the module.  This includes fixing the timed-process
-	script which used Proc::Generic instead of Proc::Background.
+Thu Aug 16 13:30:23 PDT 2001 <blair@orcaware.com> Blair Zajac
 
-Mon Jan 15 16:05:04 PST 2001 <blair@akamai.com> (Blair Zajac)
+	* lib/Proc/Background.pm: No longer use cluck and return undef
+	  to warn about invalid arguments to function calls.  Instead
+	  just call confess to print the call stack and quit the
+	  script.
+	* lib/Proc/Background/Unix.pm: Ditto.
+	* lib/Proc/Background/Win32.pm: Ditto.
 
-        Release version 1.02.
+Tue Aug 14 22:50:14 PDT 2001 <blair@orcaware.com> Blair Zajac
 
-Mon Jan 15 10:32:59 PST 2001 <blair@akamai.com> (Blair Zajac)
+	* lib/Proc/Background/Win32.pm: Remove an unnessary loop label
+	  in _die.
+	* lib/Proc/Background.pm: Update the documentation to be
+	  clearer.
+	* README: Remove the reference to my FTP site, as it is no
+	  longer being used.
+	* README: Update all references to Blair Zajac's email
+	  addresses to blair@orcaware.com.
+	* CHANGES: Ditto.
+	* lib/Proc/Background/Unix.pm: Ditto.
+	* lib/Proc/Background/Win32.pm: Ditto.
+	* lib/Proc/Background.pm: Ditto.
 
-	Make Proc::Background::new flexible enough to behave in the
-	same manner as exec() or system() do when passed either a
-	single or multiple arguments.  When the command to put in the
-	background run is passed as an array with two or more
-	elements, run the command directly without passing the command
-	through the shell.  When a single argument is passed to
-	Proc::Background::new, pass the command through the shell.
-	Add a new test to the test suite to check a command passed as
-	a single argument to Proc::Background::new.
+Sun Feb  4 13:54:37 PST 2001 <blair@orcaware.com> Blair Zajac
 
-	Remove 'Unrecognized escape \w passed through at Background.pm
-	line 30' warning when using Perl 5.6.0.
+	* Release version 1.03.
 
-Wed Jun 21 09:51:37 PDT 2000 <blair@akamai.com> (Blair Zajac)
+Sun Feb  4 11:50:15 PST 2001 <blair@orcaware.com> Blair Zajac
 
-	Release version 1.01.
+	* Add a new command line option to timed-process, -e, that
+	  takes an integer argument.  This value sets the exit value
+	  timed-process uses for its exit call when it has to kill the
+	  given program because the timeout elapsed.  This value is
+	  not used if the process exits before the timeout expires.
+	* t/01proc.t: Add tests for for the timed-process script.
 
-Wed Jun 21 09:47:33 PDT 2000 <blair@akamai.com> (Blair Zajac)
+Sat Feb  3 14:21:32 PST 2001 <blair@orcaware.com> Blair Zajac
 
-	Proc::Background::Win32 used to only protect arguments that
-	contained he space character by placing "'s around the
-	argument.  Now, make sure that each individual argument to
-	Proc::Backgrond ends up going to the Windows shell in such a
-	way that the shell sees the argument as a single argument.
-	This means escaping "'s that are not already escaped and
-	placing "'s around the argument if it matches \s.  This will
-	protect the string if it finds a \s in it and not just a
-	space.
+	* Change all occurrences of Proc::Generic, which was the
+	  original name of this module, with Proc::Background in every
+	  file in the module.  This includes fixing the timed-process
+	  script which used Proc::Generic instead of Proc::Background.
 
-Thu Apr 20 14:46:31 PDT 2000 <blair@akamai.com> (Blair Zajac)
+Mon Jan 15 16:05:04 PST 2001 <blair@orcaware.com> Blair Zajac
 
-	Release version 1.00.
+	* Release version 1.02.
 
-Thu Apr 20 14:40:11 PDT 2000 <blair@akamai.com> (Blair Zajac)
+Mon Jan 15 10:32:59 PST 2001 <blair@orcaware.com> Blair Zajac
 
-	In certain circumstances on older Perls, Proc::Background
-	would complain that @_ could not be modified since it is a
-	read only variable.  Make a copy of @_ and modify that.
+	* Make Proc::Background::new flexible enough to behave in the
+	  same manner as exec() or system() do when passed either a
+	  single or multiple arguments.  When the command to put in
+	  the background run is passed as an array with two or more
+	  elements, run the command directly without passing the
+	  command through the shell.  When a single argument is passed
+	  to Proc::Background::new, pass the command through the
+	  shell. Add a new test to the test suite to check a command
+	  passed as a single argument to Proc::Background::new.
+	* Remove 'Unrecognized escape \w passed through at
+	  Background.pm line 30' warning when using Perl 5.6.0.
 
-Wed Apr 19 19:50:51 PDT 2000 <blair@akamai.com> (Blair Zajac)
+Wed Jun 21 09:51:37 PDT 2000 <blair@orcaware.com> Blair Zajac
 
-	Release version 0.03.
+	* Release version 1.01.
 
-Wed Apr 19 14:47:58 PDT 2000 <blair@akamai.com> (Blair Zajac)
+Wed Jun 21 09:47:33 PDT 2000 <blair@orcaware.com> Blair Zajac
 
-	Relax the requirement that the path to the program has to be
-	absolute.  If it is not absolute, then look for the absolute
-	location of the program.
+	* Proc::Background::Win32 used to only protect arguments that
+	  contained he space character by placing "'s around the
+	  argument.  Now, make sure that each individual argument to
+	  Proc::Backgrond ends up going to the Windows shell in such a
+	  way that the shell sees the argument as a single
+	  argument. This means escaping "'s that are not already
+	  escaped and placing "'s around the argument if it matches
+	  \s.  This will protect the string if it finds a \s in it and
+	  not just a space.
 
-	Add a new method named pid that returns the process ID of the
-	new process.
+Thu Apr 20 14:46:31 PDT 2000 <blair@orcaware.com> Blair Zajac
 
-Sun Jun 28 12:43:39 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
+	* Release version 1.00.
 
-	Release version 0.02.
+Thu Apr 20 14:40:11 PDT 2000 <blair@orcaware.com> Blair Zajac
 
-Tue Jun 23 15:13:13 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
+	* In certain circumstances on older Perls, Proc::Background
+	  would complain that @_ could not be modified since it is a
+	  read only variable.  Make a copy of @_ and modify that.
 
-	Restructure the die method.  Keep the OS independent code for
-	killing a process in Proc::Background and the OS dependent
-	killing code in Proc::Background::*.
+Wed Apr 19 19:50:51 PDT 2000 <blair@orcaware.com> Blair Zajac
 
-	Update the POD for Proc::Background to be more explicit about
-	what start_time and end_time return.
+	* Release version 0.03.
 
-	Fix bugs in Proc::Background::Win32.
+Wed Apr 19 14:47:58 PDT 2000 <blair@orcaware.com> Blair Zajac
 
-	Update Makefile.PL to check for Win32::Process installed on
-	Win32 systems.
+	* Relax the requirement that the path to the program has to be
+	  absolute.  If it is not absolute, then look for the absolute
+	  location of the program.
 
-Thu Jun 18 14:52:01 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
+	* Add a new method named pid that returns the process ID of
+	  the new process.
 
-	Update the README to indicate that libwin32 is only needed
-	on Win32 systems.
+Sun Jun 28 12:43:39 PDT 1998 <blair@orcaware.com> Blair Zajac
 
-	Remove calls to croak or die.  Call cluck instead.
+	* Release version 0.02.
 
-	Fix the implementation documentation.
+Tue Jun 23 15:13:13 PDT 1998 <blair@orcaware.com> Blair Zajac
 
-	Remove Proc::Background::Win32::alive since
-	Proc::Background::alive works.
+	* Restructure the die method.  Keep the OS independent code
+	  for killing a process in Proc::Background and the OS
+	  dependent killing code in Proc::Background::*.
+	* Update the POD for Proc::Background to be more explicit
+	  about what start_time and end_time return.
+	* Fix bugs in Proc::Background::Win32.
+	* Update Makefile.PL to check for Win32::Process installed on
+	  Win32 systems.
 
-Thu Apr 24 12:00:00 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
+Thu Jun 18 14:52:01 PDT 1998 <blair@orcaware.com> Blair Zajac
 
-	Version 0.01
-	First version.
+	* Update the README to indicate that libwin32 is only needed
+	  on Win32 systems.
+	* Remove calls to croak or die.  Call cluck instead.
+	* Fix the implementation documentation.
+	* Remove Proc::Background::Win32::alive since
+	  Proc::Background::alive works.
+
+Thu Apr 24 12:00:00 PDT 1998 <blair@orcaware.com> Blair Zajac
+
+	* Version 0.01

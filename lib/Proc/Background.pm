@@ -7,14 +7,14 @@ package Proc::Background;
 require 5.004_04;
 
 use strict;
-use vars qw(@ISA $VERSION @EXPORT_OK);
 use Exporter;
-use Carp qw(cluck);
+use Carp;
 use Cwd;
 
+use vars qw(@ISA $VERSION @EXPORT_OK);
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
-$VERSION   = substr q$Revision: 1.03 $, 10;
+$VERSION   = substr q$Revision: 1.04 $, 10;
 
 # Determine if the operating system is Windows.
 my $is_windows = $^O eq 'MSWin32';
@@ -37,15 +37,12 @@ if ($is_windows) {
 
 # Make this class a subclass of Proc::Win32 or Proc::Unix.  Any
 # unresolved method calls will go to either of these classes.
-OS: {
-  if ($is_windows) {
-    require Proc::Background::Win32;
-    unshift(@ISA, 'Proc::Background::Win32');
-    last OS;
-  }
+if ($is_windows) {
+  require Proc::Background::Win32;
+  unshift(@ISA, 'Proc::Background::Win32');
+} else {
   require Proc::Background::Unix;
   unshift(@ISA, 'Proc::Background::Unix');
-  last OS;
 }
 
 # Take either a relative or absolute path to a command and make it an
@@ -112,9 +109,13 @@ sub _resolve_path {
 sub new {
   my $class = shift;
 
+  my $options;
+  if (@_ and defined $_[0] and UNIVERSAL::isa($_[0], 'HASH')) {
+    $options = shift;
+  }
+
   unless (@_ > 0) {
-    cluck "$class::new called with insufficient number of arguments";
-    return;
+    confess "Proc::Background::new called with insufficient number of arguments";
   }
 
   return unless $_[0];
@@ -124,7 +125,19 @@ sub new {
   # Save the start time of the class.
   $self->{_start_time} = time;
 
+  # Handle the specific options.
+  if ($options) {
+    $self->{_die_upon_destroy} = $options->{die_upon_destroy};
+  }
+
   bless $self, $class;
+}
+
+sub DESTROY {
+  my $self = shift;
+  if ($self->{_die_upon_destroy}) {
+    $self->die;
+  }
 }
 
 # Reap the child.  If the first argument is 0 the wait should return
@@ -213,14 +226,12 @@ sub pid {
 
 sub timeout_system {
   unless (@_ > 1) {
-    cluck "$0: timeout_system passed too few arguments.\n";
-    return;
+    confess "$0: timeout_system passed too few arguments.\n";
   }
 
   my $timeout = shift;
   unless ($timeout =~ /^\d+(?:\.\d*)?$/ or $timeout =~ /^\.\d+$/) {
-    cluck "$0: timeout_system passed a non-positive number first argument.\n";
-    return;
+    confess "$0: timeout_system passed a non-positive number first argument.\n";
   }
 
   my $proc = Proc::Background->new(@_) or return;
@@ -256,6 +267,7 @@ Proc::Background - Generic interface to Unix and Win32 background process manage
     use Proc::Background;
     timeout_system($seconds, $command, $arg1);
     timeout_system($seconds, "$command $arg1");
+
     my $proc1 = Proc::Background->new($command, $arg1, $arg2);
     my $proc2 = Proc::Background->new("$command $arg1 1>&2");
     $proc1->alive;
@@ -264,9 +276,15 @@ Proc::Background - Generic interface to Unix and Win32 background process manage
     my $time1 = $proc1->start_time;
     my $time2 = $proc1->end_time;
 
+    # Add an option to kill the process with die when the variable is
+    # DETROYed.
+    my $opts  = {'die_upon_destroy' => 1};
+    my $proc3 = Proc::Background->new($opts, $command, $arg1, $arg2);
+    $proc3    = undef;
+
 =head1 DESCRIPTION
 
-This is a generic interface for placing processes in background on
+This is a generic interface for placing processes in the background on
 both Unix and Win32 platforms.  This module lets you start, kill, wait
 on, retrieve exit values, and see if background processes still exist.
 
@@ -274,9 +292,9 @@ on, retrieve exit values, and see if background processes still exist.
 
 =over 4
 
-=item B<new> I<command>, [I<arg>, [I<arg>, ...]]
+=item B<new> [options] I<command>, [I<arg>, [I<arg>, ...]]
 
-=item B<new> 'I<command> [I<arg> [I<arg> ...]]'
+=item B<new> [options] 'I<command> [I<arg> [I<arg> ...]]'
 
 This creates a new background process.  As exec() or system() may be
 passed an array with a single single string element containing a
@@ -329,6 +347,13 @@ For non-Win32 operating systems, such as Unix:
     found, then new fails.  These steps are taking to prevent
     exec() from failing after an fork() without the caller of
     new knowing that something failed.
+
+The first argument to B<new> I<options> may be a reference to a hash
+which contains key/value pairs to modify Proc::Background's behavior.
+Currently the only key understood by B<new> is I<die_upon_destroy>.
+When this value is set to true, then when the Proc::Background object
+is being DESTROY'ed for any reason (i.e. the variable goes out of
+scope) the process is killed via the die() method.
 
 If anything fails, then new returns an empty list in a list context,
 an undefined value in a scalar context, or nothing in a void context.
@@ -408,14 +433,15 @@ scalar context, or nothing in a void context.
 =head1 IMPLEMENTATION
 
 I<Proc::Background> comes with two modules, I<Proc::Background::Unix>
-and I<Proc::Background::Win32>.  Currently, on the Unix platform
-I<Proc::Background> it uses the I<Proc::Background::Unix> class and on
-the Win32 platform I<Proc::Win32>, which makes use of
-I<Win32::Process>, is used.
+and I<Proc::Background::Win32>.  Currently, on Unix platforms
+I<Proc::Background> uses the I<Proc::Background::Unix> class and on
+Win32 platforms it uses I<Proc::Background::Win32>, which makes use of
+I<Win32::Process>.
 
-The I<Proc::Background> assigns to @ISA either I<Proc::Unix> or
-I<Proc::Win32>, which does the OS dependent work.  The OS independent
-work is done in I<Proc::Background>.
+The I<Proc::Background> assigns to @ISA either
+I<Proc::Background::Unix> or I<Proc::Background::Win32>, which does
+the OS dependent work.  The OS independent work is done in
+I<Proc::Background>.
 
 Proc::Background uses two variables to keep track of the process.
 $self->{_os_obj} contains the operating system object to reference the
@@ -436,12 +462,11 @@ gather the exit status.  In this case, the exit status will be set to
 
 =head1 SEE ALSO
 
-See also the L<Proc::Background::Unix> and L<Proc::Background::Win32>
-manual pages.
+See also L<Proc::Background::Unix> and L<Proc::Background::Win32>.
 
 =head1 AUTHOR
 
-Blair Zajac <blair@gps.caltech.edu>
+Blair Zajac <blair@orcaware.com>
 
 =head1 COPYRIGHT
 

@@ -4,7 +4,7 @@
 use strict;
 use vars qw($loaded);
 
-BEGIN { $| = 1; print "1..41\n"; }
+BEGIN { $| = 1; print "1..47\n"; }
 END   {print "not ok 1\n" unless $loaded; }
 
 my $ok_count = 1;
@@ -180,3 +180,34 @@ ok($result[2] ==   0);						# 38
 ok($result[0] == 153);						# 39
 ok($result[1] ==   0);						# 40
 ok($result[2] ==   0);						# 41
+
+# Test the ability to pass options to Proc::Background::new.
+my %options;
+my $p6 = EmptySubclass->new(\%options, 'perl', '-w', $sleep_exit, 0, 43);
+ok($p6);							# 42
+if ($p6) {
+  ok(($p6->wait >> 8) == 43);					# 43
+} else {
+  ok(0);							# 43
+}
+
+# Test to make sure that the process is killed when the
+# Proc::Background object goes out of scope.
+$options{die_upon_destroy} = 1;
+{
+  my $pid;
+  my $p7 = EmptySubclass->new(\%options, 'perl', '-w', $sleep_exit, 99999, 98);
+  ok($p7);							# 44
+  if ($p7) {
+    my $pid = $p7->pid;
+    ok(defined $pid);						# 45
+    ok(kill(0, $pid) == 1);					# 46
+    $p7 = undef;
+    sleep 1;
+    ok(kill(0, $pid) == 0);					# 47
+  } else {
+    ok(0);							# 45
+    ok(0);							# 46
+    ok(0);							# 47
+  }
+}

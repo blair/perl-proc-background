@@ -1,30 +1,29 @@
 # Proc::Background::Win32 Windows interface to background process management.
 #
-# Copyright (C) 1998, 1999, 2000, 2001 Blair Zajac.
+# Copyright (C) 1998-2001 Blair Zajac.
 
 package Proc::Background::Win32;
 
 require 5.004_04;
 
 use strict;
-use vars qw(@ISA $VERSION);
 use Exporter;
-use Carp qw(cluck);
+use Carp;
+
+use vars qw(@ISA $VERSION);
+@ISA     = qw(Exporter);
+$VERSION = substr q$Revision: 1.04 $, 10;
 
 BEGIN {
   eval "use Win32::Process";
   $@ and die "Proc::Background::Win32 needs Win32::Process from libwin32-?.??.zip to run.\n";
 }
 
-@ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.03 $, 10;
-
 sub _new {
   my $class = shift;
 
   unless (@_ > 0) {
-    cluck "$class::_new called with insufficient number of arguments";
-    return;
+    confess "Proc::Background::Win32::_new called with insufficient number of arguments";
   }
 
   return unless $_[0];
@@ -105,14 +104,12 @@ sub _die {
 
   # Try the kill the process several times.  Calling alive() will
   # collect the exit status of the program.
-  SIGNAL: {
-    my $count = 5;
-    while ($count and $self->alive) {
-      --$count;
-      my $res = $self->{_os_obj}->Kill(1<<8);
-      last SIGNAL unless $self->alive;
-      sleep 1;
-    }
+  my $count = 5;
+  while ($count and $self->alive) {
+    --$count;
+    $self->{_os_obj}->Kill(1<<8);
+    last unless $self->alive;
+    sleep 1;
   }
 }
 
@@ -140,7 +137,7 @@ This package uses the Win32::Process class to manage the objects.
 
 =head1 AUTHOR
 
-Blair Zajac <blair@gps.caltech.edu>
+Blair Zajac <blair@orcaware.com
 
 =head1 COPYRIGHT
 
