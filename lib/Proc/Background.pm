@@ -14,7 +14,7 @@ use Cwd;
 
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
-$VERSION   = substr q$Revision: 1.02 $, 10;
+$VERSION   = substr q$Revision: 1.03 $, 10;
 
 # Determine if the operating system is Windows.
 my $is_windows = $^O eq 'MSWin32';
@@ -48,7 +48,7 @@ OS: {
   last OS;
 }
 
-# Take either a relative or absolute path to a program and make it an
+# Take either a relative or absolute path to a command and make it an
 # absolute path.
 sub _resolve_path {
   my $command = shift;
@@ -59,7 +59,7 @@ sub _resolve_path {
   # path is not absolute and if the path contains a directory element
   # separator, then only prepend the current working to it.  If the
   # path is not absolute, then look through the PATH environment to
-  # find the program.  In all cases, look for the programs with any
+  # find the executable.  In all cases, look for the programs with any
   # extensions added to the original path name.
   my $path;
   if ($command =~ /$is_absolute_re/o) {
@@ -212,20 +212,33 @@ sub pid {
 }
 
 sub timeout_system {
-  @_ > 1 or
-    cluck "$0: timeout_system passed wrong number of arguments.\n";
-  my $timeout = shift;
+  unless (@_ > 1) {
+    cluck "$0: timeout_system passed too few arguments.\n";
+    return;
+  }
 
-  $timeout = 10000000 unless defined($timeout);
+  my $timeout = shift;
+  unless ($timeout =~ /^\d+(?:\.\d*)?$/ or $timeout =~ /^\.\d+$/) {
+    cluck "$0: timeout_system passed a non-positive number first argument.\n";
+    return;
+  }
+
   my $proc = Proc::Background->new(@_) or return;
   my $end_time = $proc->start_time + $timeout;
   while ($proc->alive and time < $end_time) {
     sleep(1);
   }
-  if ($proc->alive) {
+
+  my $alive = $proc->alive;
+  if ($alive) {
     $proc->die;
   }
-  $proc->wait;
+
+  if (wantarray) {
+    return ($proc->wait, $alive);
+  } else {
+    return $proc->wait;
+  }
 }
 
 1;
@@ -241,10 +254,10 @@ Proc::Background - Generic interface to Unix and Win32 background process manage
 =head1 SYNOPSIS
 
     use Proc::Background;
-    timeout_system($seconds, $path_to_program, $arg1);
-    timeout_system($seconds, "$path_to_program $arg1");
-    my $proc1 = Proc::Background->new($path_to_program, $arg1, $arg2);
-    my $proc2 = Proc::Background->new("$path_to_program $arg1 1>&2");
+    timeout_system($seconds, $command, $arg1);
+    timeout_system($seconds, "$command $arg1");
+    my $proc1 = Proc::Background->new($command, $arg1, $arg2);
+    my $proc2 = Proc::Background->new("$command $arg1 1>&2");
     $proc1->alive;
     $proc1->die;
     $proc1->wait;
@@ -253,27 +266,26 @@ Proc::Background - Generic interface to Unix and Win32 background process manage
 
 =head1 DESCRIPTION
 
-This is a generic interface to place programs in background processing
-on both Unix and Win32 platforms.  This class lets you start, kill,
-wait on, retrieve exit values, and see if background processes are
-still exist.
+This is a generic interface for placing processes in background on
+both Unix and Win32 platforms.  This module lets you start, kill, wait
+on, retrieve exit values, and see if background processes still exist.
 
 =head1 METHODS
 
 =over 4
 
-=item B<new> I<path>, [I<arg>, [I<arg>, ...]]
+=item B<new> I<command>, [I<arg>, [I<arg>, ...]]
 
-=item B<new> 'I<path> [I<arg> [I<arg> ...]]'
+=item B<new> 'I<command> [I<arg> [I<arg> ...]]'
 
-This creates a new background process.  As I<exec> or I<system> may be
+This creates a new background process.  As exec() or system() may be
 passed an array with a single single string element containing a
 command to be passed to the shell or an array with more than one
 element to be run without calling the shell, B<new> has the same
 behavior.
 
-In certain cases B<new> will attempt to find I<path> on the system and
-fail if it cannot be found.
+In certain cases B<new> will attempt to find I<command> on the system
+and fail if it cannot be found.
 
 For Win32 operating systems:
 
@@ -333,30 +345,31 @@ Return 1 if the process is still active, 0 otherwise.
 =item B<die>
 
 Reliably try to kill the process.  Returns 1 if the process no longer
-exists once I<die> has completed, 0 otherwise.  This will also return
+exists once B<die> has completed, 0 otherwise.  This will also return
 1 if the process has already died.  On Unix, the following signals are
 sent to the process in one second intervals until the process dies:
 HUP, QUIT, INT, KILL.
 
 =item B<wait>
 
-Wait for the process to exit.  Return the exit status of the program
-as returned by I<wait>() on the system.  To get the actual exit value,
-divide by 256, regardless of the operating system being used.  If the
-process never existed, then return an empty list in a list context, an
-undefined value in a scalar context, or nothing in a void context.
-This function may be called multiple times even after the process has
-exited and it will return the same exit status.
+Wait for the process to exit.  Return the exit status of the command
+as returned by wait() on the system.  To get the actual exit value,
+divide by 256 or right bit shift by 8, regardless of the operating
+system being used.  If the process never existed, then return an empty
+list in a list context, an undefined value in a scalar context, or
+nothing in a void context.  This function may be called multiple times
+even after the process has exited and it will return the same exit
+status.
 
 =item B<start_time>
 
-Return the value that the Perl function I<time>() returned when the
+Return the value that the Perl function time() returned when the
 process was started.
 
 =item B<end_time>
 
-Return the value that the Perl function I<time>() returned when the
-exit status was obtained from the process.
+Return the value that the Perl function time() returned when the exit
+status was obtained from the process.
 
 =back
 
@@ -364,48 +377,60 @@ exit status was obtained from the process.
 
 =over 4
 
-=item B<timeout_system> I<timeout>, I<path>, [I<arg>, [I<arg>...]]
+=item B<timeout_system> I<timeout>, I<command>, [I<arg>, [I<arg>...]]
 
-=item B<timeout_system> 'I<timeout> I<path> [I<arg> [I<arg>...]]'
+=item B<timeout_system> 'I<timeout> I<command> [I<arg> [I<arg>...]]'
 
 Run a command for I<timeout> seconds and if the process did not exit,
-then kill it.  The location of the program must be used passed in
-I<path>.  While the timeout is implemented using I<sleep>(), this
-function makes sure that the full I<timeout> is reached before
-I<kill>ing the process.  The return is the exit status returned from
-the I<wait>() call.  To get the actual exit value, divide by 256.  If
-something failed in the creation of the process, it returns an empty
-list in a list context, an undefined value in a scalar context, or
-nothing in a void context.
+then kill it.  While the timeout is implemented using sleep(), this
+function makes sure that the full I<timeout> is reached before killing
+the process.  B<timeout_system> does not wait for the complete
+I<timeout> number of seconds before checking if the process has
+exited.  Rather, it sleeps repeatidly for 1 second and checks to see
+if the process still exists.
+
+In a scalar context, B<timeout_system> returns the exit status from
+the process.  In an array context, B<timeout_system> returns a two
+element array, where the first element is the exist status from the
+process and the second is set to 1 if the process was killed by
+B<timeout_system> or 0 if the process exited by itself.
+
+The exit status is the value returned from the wait() call.  If the
+process was killed, then the return value will include the killing of
+it.  To get the actual exit value, divide by 256.
+
+If something failed in the creation of the process, the subroutine
+returns an empty list in a list context, an undefined value in a
+scalar context, or nothing in a void context.
 
 =back
 
 =head1 IMPLEMENTATION
 
-I<Proc::Background> comes with two packages, I<Proc::Background::Unix>
+I<Proc::Background> comes with two modules, I<Proc::Background::Unix>
 and I<Proc::Background::Win32>.  Currently, on the Unix platform
 I<Proc::Background> it uses the I<Proc::Background::Unix> class and on
 the Win32 platform I<Proc::Win32>, which makes use of
 I<Win32::Process>, is used.
 
-The I<Proc::Background> is package that just assigns to @ISA either
-I<Proc::Unix> or I<Proc::Win32>, which does the OS dependent work.
-The OS independent work is done in I<Proc::Background>.
+The I<Proc::Background> assigns to @ISA either I<Proc::Unix> or
+I<Proc::Win32>, which does the OS dependent work.  The OS independent
+work is done in I<Proc::Background>.
 
-Use two variables to keep track of the process.  $self->{_os_obj}
-contains the operating system object to reference the process.  On a
-Unix systems this is the process id (pid).  On Win32, it is an object
-returned from the I<Win32::Process> class.  When $self->{_os_obj}
-exists, then the program is running.  When the program dies, this is
-recorded by deleting $self->{_os_obj} and saving the exit value
-$self->{_exit_value}.
+Proc::Background uses two variables to keep track of the process.
+$self->{_os_obj} contains the operating system object to reference the
+process.  On a Unix systems this is the process id (pid).  On Win32,
+it is an object returned from the I<Win32::Process> class.  When
+$self->{_os_obj} exists, then the process is running.  When the
+process dies, this is recorded by deleting $self->{_os_obj} and saving
+the exit value $self->{_exit_value}.
 
-Anytime I<alive>() is called, a I<waitpid>() is called on the process
-and the return status, if any, is gathered and saved for a call to
-I<wait>().  This module does not install a signal handler for SIGCHLD.
+Anytime I<alive> is called, a waitpid() is called on the process and
+the return status, if any, is gathered and saved for a call to
+I<wait>.  This module does not install a signal handler for SIGCHLD.
 If for some reason, the user has installed a signal handler for
-SIGCHLD, then, then when this module calls I<waitpid>(), the failure
-will be noticed and taken as the exited child, but it won't be able to
+SIGCHLD, then, then when this module calls waitpid(), the failure will
+be noticed and taken as the exited child, but it won't be able to
 gather the exit status.  In this case, the exit status will be set to
 0.
 

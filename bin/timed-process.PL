@@ -21,39 +21,61 @@ timed-process - Run background process for limited amount of time
 
 =head1 SYNOPSIS
 
-    timed-process timeout path_to_program [<arg>...]
+    timed-process [-e exit_status] timeout command [<arg> [<arg> ...]]
 
 =head1 DESCRIPTION
 
-This script runs a program for a specified amount of time and if it
-doesn't finish, it kills the process.  This script requires the
-complete pathname to the program to run and any optional arguments.
-The program returns the exit status of the executed program.
+This script runs I<command> for a specified amount of time and if it
+doesn't finish, it kills the process.  If I<command> runs and exits
+before the given timeout, B<timed-process> returns the exit value of
+I<command>.  If I<command> did not exit before I<timeout> seconds,
+then B<timed-process> will kill the process and returns an exit value
+of 255, unless the -e command line option is set, which instructs
+B<timed-process> to return a different exit value.  This allows the
+user of B<timed-process> to determine if the process ended normally or
+was killed.
 
 =cut
 
 use strict;
-use Proc::Generic qw(timeout_system);
+use Proc::Background 1.03 qw(timeout_system);
 use Getopt::Long;
 
 $0 =~ s:.*/::;
 
 sub usage {
   print <<END;
-Usage: $0 timeout path_to_program [<arg>...]
+usage: $0 [-e exit_status] timeout command [<arg> [<arg> ...]]
 
-This script runs a program for a specified amount of time and if it
-doesn't finish, it kills the process.  This script requires the
-complete pathname to the program to run and any optional arguments.
-The program returns the exit status of the executed program.
+This script runs command for a specified amount of time and if it
+doesn't finish, it kills the process.  If command runs and exits
+before the given timeout, timed-process returns the exit value of
+command.  If command did not exit before timeout seconds, then
+timed-process will kill the process and returns an exit value of 255,
+unless the -e command line option is set, which instructs
+timed-process to return a different exit value.  This allows the user
+of timed-process to determine if the process ended normally or was
+killed.
 END
   exit 1;
 }
 
+my $exit_status = 255;
+Getopt::Long::Configure('require_order');
+GetOptions('exit-status=i', => \$exit_status) or
+  usage;
+if ($exit_status < 0) {
+  die "$0: exit status value `$exit_status' cannot be negative.\n";
+}
+
 @ARGV > 1 or usage;
 
-print "@ARGV\n";
+my @result = timeout_system(@ARGV);
 
-exit timeout_system(@ARGV);
+if ($result[1]) {
+  exit $exit_status;
+} else {
+  exit $result[0] >> 8;
+}
 
 !NO!SUBS!

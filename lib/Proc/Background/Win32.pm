@@ -17,7 +17,7 @@ BEGIN {
 }
 
 @ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.02 $, 10;
+$VERSION = substr q$Revision: 1.03 $, 10;
 
 sub _new {
   my $class = shift;

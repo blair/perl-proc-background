@@ -4,7 +4,7 @@
 use strict;
 use vars qw($loaded);
 
-BEGIN { $| = 1; print "1..26\n"; }
+BEGIN { $| = 1; print "1..41\n"; }
 END   {print "not ok 1\n" unless $loaded; }
 
 my $ok_count = 1;
@@ -27,19 +27,38 @@ package main;
 $loaded = 1;
 ok(1);								# 1
 
-# Find the sleep_exit.pl code.  This script takes a sleep time and an
-# exit value.
+# Find the lib directory.
+my $lib;
+foreach my $l (qw(lib ../lib)) {
+  if (-d $l) {
+    $lib = $l;
+    last;
+  }
+}
+$lib or die "Cannot find lib directory.\n";
+
+# Find the sleep_exit.pl and timed-process scripts.  The sleep_exit.pl
+# script takes a sleep time and an exit value.  timed-process takes a
+# sleep time and a command to run.
 my $sleep_exit;
-foreach my $dir (qw(. ./t Proc-Background/t)) {
-  my $s = "$dir/sleep_exit.pl";
-  -r $s or next;
-  $sleep_exit = $s;
-  last;
+my $timed_process;
+foreach my $dir (qw(. ./bin ./t ../bin ../t Proc-Background/t)) {
+  unless ($sleep_exit) {
+    my $s = "$dir/sleep_exit.pl";
+    $sleep_exit = $s if -r $s;
+  }
+  unless ($timed_process) {
+    my $t = "$dir/timed-process";
+    $timed_process = $t if -r $t;
+  }
 }
 $sleep_exit or die "Cannot find sleep_exit.pl.\n";
+$timed_process or die "Cannot find timed-process.\n";
+my @sleep_exit    = ($^X, '-w', $sleep_exit);
+my @timed_process = ($^X, '-w', "-I$lib", $timed_process);
 
 # Test the alive and wait returns.
-my $p1 = EmptySubclass->new($^X, $sleep_exit, 2, 26);
+my $p1 = EmptySubclass->new(@sleep_exit, 2, 26);
 ok($p1);							# 2
 if ($p1) {
   ok($p1->alive);						# 3
@@ -56,8 +75,7 @@ if ($p1) {
 # bogus command line options to the program to make sure that the
 # argument protecting code for Windows does not cause the shell any
 # confusion.
-my $p2 = EmptySubclass->new($^X,
-                            $sleep_exit,
+my $p2 = EmptySubclass->new(@sleep_exit,
                             2,
                             5,
                             "\t",
@@ -78,7 +96,7 @@ if ($p2) {
 
 # Test die on a live process and collect the exit value.  The exit
 # value should not be 0.
-my $p3 = EmptySubclass->new($^X, $sleep_exit, 10, 0);
+my $p3 = EmptySubclass->new(@sleep_exit, 10, 0);
 ok($p3);							# 11
 if ($p3) {
   ok($p3->alive);						# 12
@@ -97,34 +115,68 @@ if ($p3) {
 
 # Test the timeout_system function.  In the first case, sleep_exit.pl
 # should exit with 26 before the timeout, and in the other case, it
-# should be killed and exit with a non-zero status.
-ok((timeout_system(2, $^X, $sleep_exit, 0, 26) >> 8) == 26);	# 17
-ok(timeout_system(1, $^X, $sleep_exit, 4, 0));			# 18
+# should be killed and exit with a non-zero status.  Do not check the
+# wait return value when the process is killed, since the return value
+# is different on Unix and Win32 platforms.
+my $a = timeout_system(2, @sleep_exit, 0, 26);
+my @a = timeout_system(2, @sleep_exit, 0, 26);
+ok($a>>8 == 26);						# 17
+ok(@a == 2);							# 18
+ok($a[0]>>8 == 26);						# 19
+ok($a[1]    == 0);						# 20
+$a = timeout_system(1, @sleep_exit, 4, 0);
+@a = timeout_system(1, @sleep_exit, 4, 0);
+ok($a);								# 21
+ok(@a == 2);							# 22
+ok($a[0]);							# 23
+ok($a[1] == 1);							# 24
 
 # Test the code to find a program if the path to it is not absolute.
-my $p4 = EmptySubclass->new('perl', $sleep_exit, 0, 0);
-ok($p4);							# 19
+my $p4 = EmptySubclass->new('perl', '-w', $sleep_exit, 0, 0);
+ok($p4);							# 25
 if ($p4) {
-  ok($p4->pid);							# 21
+  ok($p4->pid);							# 26
   sleep 2;
-  ok(!$p4->alive);						# 21
-  ok(($p4->wait >> 8) == 0);					# 22
+  ok(!$p4->alive);						# 27
+  ok(($p4->wait >> 8) == 0);					# 28
 } else {
-  ok(0);							# 20
-  ok(0);							# 21
-  ok(0);							# 22
+  ok(0);							# 26
+  ok(0);							# 27
+  ok(0);							# 28
 }
 
 # Test a command line entered as a single string.
-my $p5 = EmptySubclass->new("$^X $sleep_exit 2 26");
-ok($p5);							# 23
+my $p5 = EmptySubclass->new("@sleep_exit 2 26");
+ok($p5);							# 29
 if ($p5) {
-  ok($p5->alive);						# 24
+  ok($p5->alive);						# 30
   sleep 3;
-  ok(!$p5->alive);						# 25
-  ok(($p5->wait >> 8) == 26);					# 26
+  ok(!$p5->alive);						# 31
+  ok(($p5->wait >> 8) == 26);					# 32
 } else {
-  ok(0);							# 24
-  ok(0);							# 25
-  ok(0);							# 26
+  ok(0);							# 30
+  ok(0);							# 31
+  ok(0);							# 32
 }
+
+sub System {
+  my $result = system(@_);
+  return ($? >> 8, $? & 127, $? & 128);
+}
+
+# Test the timed-process script.  First test a normal exit.
+my @t_args = ($^X, '-w', "-I$lib", $timed_process);
+my @result = System(@t_args, '-e', 153, 3, "@sleep_exit 0 237");
+ok($result[0] == 237);						# 33
+ok($result[1] ==   0);						# 34
+ok($result[2] ==   0);						# 35
+
+@result = System(@t_args, 1, "@sleep_exit 10 27");
+ok($result[0] == 255);						# 36
+ok($result[1] ==   0);						# 37
+ok($result[2] ==   0);						# 38
+
+@result = System(@t_args, '-e', 153, 1, "@sleep_exit 10 27");
+ok($result[0] == 153);						# 39
+ok($result[1] ==   0);						# 40
+ok($result[2] ==   0);						# 41

@@ -1,3 +1,24 @@
+Sun Feb  4 13:54:37 PST 2001 <blair@akamai.com> (Blair Zajac)
+
+        Release version 1.03.
+
+Sun Feb  4 11:50:15 PST 2001 <blair@akamai.com> (Blair Zajac)
+
+	Add a new command line option to timed-process, -e, that takes
+	an integer argument.  This value sets the exit value
+	timed-process uses for its exit call when it has to kill the
+	given program because the timeout elapsed.  This value is not
+	used if the process exits before the timeout expires.
+
+	Add tests for for the timed-process script in t/01proc.t.
+
+Sat Feb  3 14:21:32 PST 2001 <blair@akamai.com> (Blair Zajac)
+
+	Change all occurrences of Proc::Generic, which was the
+	original name of this module, with Proc::Background in every
+	file in the module.  This includes fixing the timed-process
+	script which used Proc::Generic instead of Proc::Background.
+
 Mon Jan 15 16:05:04 PST 2001 <blair@akamai.com> (Blair Zajac)
 
         Release version 1.02.
