@@ -14,7 +14,7 @@ use Cwd;
 
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
-$VERSION   = substr q$Revision: 0.03 $, 10;
+$VERSION   = substr q$Revision: 1.00 $, 10;
 
 # Determine if the operating system is Windows.
 my $is_windows = $^O eq 'MSWin32';
@@ -111,9 +111,8 @@ sub new {
     }
   }
 
-  splice(@_, 0, 1, $path);
-
-  my $self = $class->SUPER::new(@_) or return;
+  shift;
+  my $self = $class->SUPER::new($path, @_) or return;
 
   # Save the start time of the class.
   $self->{_start_time} = time;
