@@ -12,7 +12,7 @@ use Carp;
 
 use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = sprintf '%d.%02d', '$Revision: 1.07 $' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf '%d.%02d', '$Revision: 1.08 $' =~ /(\d+)\.(\d+)/;
 
 BEGIN {
   eval "use Win32";
@@ -52,7 +52,7 @@ sub _new {
       $arg =~ s#"#\\"#g;
       $arg =~ s#\200#\\\\#g;
       $arg =~ s#\201#\\"#g;
-      if ($arg =~ /\s/) {
+      if (length($arg) == 0 or $arg =~ /\s/) {
         $arg = "\"$arg\"";
       }
       $args[$i] = $arg;

@@ -1,3 +1,20 @@
+Sat Dec  7 09:41:58 PST 2002
+
+	* Release version 1.08.
+
+Sat Dec  7 09:33:53 PST 2002 <blair@orcaware.com> Blair Zajac
+
+	* lib/Proc/Background/Win32.pm (_new): When more than one
+	  argument is passed to _new in @_, each array element may be
+	  quoted to protect whitespace so that the final assembly of
+	  the individual arguments into one string, using "@_", that
+	  is passed to Win32::Process::Create works.  An empty string
+	  was not being protected and was lost from the command line
+	  arguments.  Bug fix by Jim Hahn <jrh3@att.com>.
+	* README: Note that this package is hosted in a Subversion
+	  repository and give its URL.
+	* Changes: Renamed from CHANGES.
+
 Sat Apr 20 19:27:53 PDT 2002 <blair@orcaware.com> Blair Zajac
 
 	* Release version 1.07.
