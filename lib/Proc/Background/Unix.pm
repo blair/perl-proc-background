@@ -5,10 +5,10 @@ require 5.004_04;
 use strict;
 use vars qw(@ISA $VERSION);
 use Exporter;
-use Carp;
+use Carp qw(cluck croak);
 use POSIX qw(:errno_h :sys_wait_h);
 
-$VERSION = do {my @r=(q$Revision: 0.01 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
+$VERSION = do {my @r=(q$Revision: 0.02 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
 @ISA     = qw(Exporter);
 
 # Start the background process.  If it is started sucessfully, then record
@@ -16,7 +16,10 @@ $VERSION = do {my @r=(q$Revision: 0.01 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
 sub new {
   my $class = shift;
 
-  @_ > 0 or croak "$0: new $class called with insufficient number of arguments";
+  unless (@_ > 0) {
+    cluck "$class::new called with insufficient number of arguments";
+    return;
+  }
 
   my $self = bless {}, $class;
   
@@ -70,12 +73,8 @@ sub _waitpid {
   return 0;
 }
 
-sub die {
+sub _die {
   my $self = shift;
-
-  # The process is dead if we've already seen it die.
-  exists($self->{_os_obj}) or
-    return 1;
 
   # Try to kill the process with different signals.  Calling alive() will
   # collect the exit status of the program.
@@ -90,8 +89,6 @@ sub die {
       }
     }
   }
-
-  !$self->alive;
 }
 
 1;

@@ -5,9 +5,9 @@ require 5.004_04;
 use strict;
 use vars qw(@ISA $VERSION @EXPORT_OK);
 use Exporter;
-use Carp qw(confess croak carp cluck);
+use Carp qw(cluck);
 
-$VERSION = do {my @r=(q$Revision: 0.01 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
+$VERSION = do {my @r=(q$Revision: 0.02 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
 
@@ -29,7 +29,10 @@ OS: {
 sub new {
   my $class = shift;
 
-  @_ > 0 or croak "$0: new $class called with insufficient number of arguments";
+  unless (@_ > 0) {
+    cluck "$class::new called with insufficient number of arguments";
+    return;
+  }
 
   my $self = $class->SUPER::new(@_) or return;
 
@@ -41,7 +44,7 @@ sub new {
 
 # Reap the child.  If the first argument is 0 the wait should return
 # immediately, 1 if it should wait forever.  If this number is
-# negative, then wait.  If the wait was sucessful, then delete
+# non-zero, then wait.  If the wait was sucessful, then delete
 # $self->{_os_obj} and set $self->{_exit_value} to the OS specific
 # class return of _reap.  Return 1 if we sucessfully waited, 0
 # otherwise.
@@ -49,10 +52,11 @@ sub _reap {
   my $self = shift;
   my $timeout = shift || 0;
 
-  exists($self->{_os_obj}) or return 0;
+  return 0 unless exists($self->{_os_obj});
 
   # Try to wait on the process.  Use the OS dependent wait call using
-  # _waitpid, which returns one of three values.
+  # the Proc::Background::*::waitpid call, which returns one of three
+  # values.
   #   (0, exit_value)	: sucessfully waited on.
   #   (1, undef)	: process already reaped and exist value lost.
   #   (2, undef)	: process still running.
@@ -72,12 +76,10 @@ sub alive {
 
   # If $self->{_os_obj} is not set, then the process is definitely
   # not running.
-  exists($self->{_os_obj}) or
-    return 0;
+  return 0 unless exists($self->{_os_obj});
 
   # If $self->{_exit_value} is set, then the process has already finished.
-  exists($self->{_exit_value}) and
-    return 0;
+  return 0 if exists($self->{_exit_value});
 
   # Try to reap the child.  If it doesn't reap, then it's alive.
   !$self->_reap(0);
@@ -92,12 +94,24 @@ sub wait {
   }
 
   # If $self->{_exit_value} exists, then we already waited.
-  exists($self->{_exit_value}) and
-    return $self->{_exit_value};
+  return $self->{_exit_value} if exists($self->{_exit_value});
 
   # Otherwise, wait forever for the process to finish.
   $self->_reap(1);
   return $self->{_exit_value};
+}
+
+sub die {
+  my $self = shift;
+
+  # See if the process has already died.
+  return 1 unless $self->alive;
+
+  # Kill the process using the OS specific method.
+  $self->_die;
+
+  # See if the process is still alive.
+  !$self->alive;
 }
 
 sub start_time {
@@ -114,8 +128,10 @@ sub end_time {
 
 sub timeout_system {
   @_ > 1 or
-    croak "$0: timeout_system passed wrong number of arguments.\n";
+    cluck "$0: timeout_system passed wrong number of arguments.\n";
   my $timeout = shift;
+
+  $timeout = 10000000 unless defined($timeout);
   my $proc = Proc::Background->new(@_) or return;
   my $end_time = $proc->start_time + $timeout;
   while ($proc->alive and time < $end_time) {
@@ -173,8 +189,10 @@ Return 1 if the process is still active, 0 otherwise.
 =item B<die>
 
 Reliably try to kill the process.  Returns 1 if the process no longer
-exists, 0 otherwise.  On Unix, use signals in the following order:
-HUP, QUIT, INT, KILL.
+exists once I<die> has completed, 0 otherwise.  This will also return
+1 if the process has already died.  On Unix, the following signals are
+sent to the process in one second intervals until the process
+dies: HUP, QUIT, INT, KILL.
 
 =item B<wait>
 
@@ -188,12 +206,13 @@ and it will return the same exit status.
 
 =item B<start_time>
 
-Return the value that I<time>() returned when the process was started.
+Return the value that the Perl function I<time>() returned when the process
+was started.
 
 =item B<end_time>
 
-Return the value that I<time>() returned when the exit status was obtained
-from the process.
+Return the value that the Perl function I<time>() returned when the exit
+status was obtained from the process.
 
 =back
 
@@ -231,7 +250,7 @@ the operating system object to reference the process.  On a Unix systems
 this is the process id (pid).  On Win32, it is an object returned from
 the I<Win32::Process> class.  When $self->{_os_obj} exists, then the program
 is running.  When the program dies, this is recorded by deleting
-$self->{_os_obj} and saving $@ into $self->{_exit_value}.
+$self->{_os_obj} and saving the exit value $self->{_exit_value}.
 
 Anytime I<alive>() is called, a I<waitpid>() is called on the process and
 the return status, if any, is gathered and saved for a call to

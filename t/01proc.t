@@ -30,7 +30,7 @@ ok(1);									# 1
 # Find the sleep_exit.pl code.  This script takes a sleep time and an
 # exit value.
 my $sleep_exit;
-foreach my $dir (qw(. ./t)) {
+foreach my $dir (qw(. ./t Proc-Background/t)) {
   my $s = "$dir/sleep_exit.pl";
   -r $s or next;
   $sleep_exit = $s;

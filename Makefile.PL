@@ -3,6 +3,35 @@
 require 5.004_04;
 use strict;
 
+# Subroutine to check for installed modules.
+sub check_version
+{
+  my ($pkg, $wanted, $msg) = @_;
+
+  local($|) = 1;
+  print "Checking for $pkg...";
+
+  eval { my $p; ($p = $pkg . ".pm") =~ s#::#/#g; require $p; };
+
+  no strict 'refs';
+
+  my $vstr = ${"${pkg}::VERSION"} ? "found v" . ${"${pkg}::VERSION"}
+                                 : "not found";
+  my $vnum = ${"${pkg}::VERSION"} || 0;
+
+  print $vnum >= $wanted ? "ok\n" : " " . $vstr . "\n";
+
+  $vnum >= $wanted;
+}
+
+# Check for needed modules.
+if ($^O eq 'MSWin32') {
+  check_version('Win32::Process' => '0.04') or
+    warn   "\n"
+         . "*** For Proc:Background you require version 0.04, or later, of\n"
+         . "    Win32::Process from CPAN/authors/id/GSAR/libwin32-x.x.tar.gz\n\n";
+}
+
 #--- Configuration section ---
 
 my @programs_to_install = qw(timed-process);

@@ -1,3 +1,33 @@
+Sun Jun 28 12:43:39 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
+
+	Release version 0.02.
+
+Tue Jun 23 15:13:13 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
+
+	Restructure the die method.  Keep the OS independent code
+	for killing a process in Proc::Background and the OS dependent
+	killing code in Proc::Background::*.
+
+	Update the POD for Proc::Background to be more explicit about
+	what start_time and end_time return.
+
+	Fix bugs in Proc::Background::Win32.
+
+	Update Makefile.PL to check for Win32::Process installed on
+	Win32 systems.
+
+Thu Jun 18 14:52:01 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
+
+	Update the README to indicate that libwin32 is only needed
+	on Win32 systems.
+
+	Remove calls to croak or die.  Call cluck instead.
+
+	Fix the implementation documentation.
+
+	Remove Proc::Background::Win32::alive since Proc::Background::alive
+	works.
+
 Thu Apr 24 12:00:00 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
 
 	Version 0.01

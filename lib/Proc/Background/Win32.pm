@@ -10,15 +10,19 @@ BEGIN {
 use strict;
 use vars qw(@ISA $VERSION);
 use Exporter;
-use Carp qw(confess croak carp cluck);
+use Carp qw(cluck);
 
-$VERSION = do {my @r=(q$Revision: 0.01 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
+$VERSION = do {my @r=(q$Revision: 0.02 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
 @ISA     = qw(Exporter);
 
 sub new {
   my $class = shift;
 
-  @_ or croak "$0: new $class called with insufficient number of arguments";
+  unless (@_ > 0) {
+    cluck "$class::new called with insufficient number of arguments";
+    return;
+  }
+
   my $program = shift;
   if (!-x $program) {
     if (-x "$program.exe") {
@@ -71,19 +75,8 @@ sub _waitpid {
   return (0, 1<<8);
 }
 
-sub alive {
+sub _die {
   my $self = shift;
-
-  exists($self->{_os_obj}) or
-    return 0;
-  $self->{_os_obj}->Wait(0);
-}
-
-sub die {
-  my $self = shift;
-
-  exists($self->{_os_obj}) or
-    return 1;
 
   # Try the kill the process several times.  Calling alive() will
   # collect the exit status of the program.
@@ -96,8 +89,6 @@ sub die {
       sleep 1;
     }
   }
-
-  !$self->alive;
 }
 
 1;

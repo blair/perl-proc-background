@@ -1,4 +1,4 @@
-Package Proc:Generic Version 0.01
+Package Proc::Generic Version 0.02
 
 This is the Proc::Generic package.  It provides a generic interface to
 running background processes.  Through this interface, users can run
@@ -25,13 +25,20 @@ package by Gurusamy Sarathy (gsar@umich.edu) available from CPAN.
 
 AVAILABILITY
 
-The latest version of this package is available from the author by
-contacting Blair Zajac <blair@gps.caltech.edu>.
+The latest version of this package is available from a CPAN
+archive near you in CPAN/authors/id/B/BZ/BZAJAC/Proc-Background-0.02.tar.gz
+or from the author by contacting Blair Zajac <blair@gps.caltech.edu>.
 
 INSTALLATION
 
 In order to use this package you will need Perl version 5.004_04 or
-better.  First install the latest libwin32-?.?? package from CPAN.
+better.
+
+If you are running on a Windows 95, Windows 98, or Windows NT
+system, then first install the latest libwin32-x.x package from CPAN
+available as CPAN/authors/id/GSAR/libwin32-x.x.zip or
+CPAN/authors/id/GSAR/libwin32-x.x.tar.gz.
+
 Once that is completed, you install Proc::Generic as you would install
 any perl module library, by running these commands:
 
