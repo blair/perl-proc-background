@@ -21,15 +21,15 @@ process did not exit, then the process is killed.
 
 AVAILABILITY
 
-The latest released version of this package is available from a CPAN
-archive near you in
+The latest released version of this package is available for download
+from a CPAN (Comprehensive Perl Archive Network) archive near you in
 
     http://www.perl.com/CPAN/authors/id/B/BZ/BZAJAC/
 
 The latest beta version of this package is hosted in a Subversion
 repository located at
 
-    http://svn.orcaware.com:8000/repos/trunk/proc_background/
+    http://svn.orcaware.com:8000/repos/trunk/perl_proc_background/
 
 Subversion is an open-source source code management system designed to
 replace CVS.  To get Subversion, see
