@@ -1,3 +1,7 @@
+# Proc::Background::Unix: Unix interface to background process management.
+#
+# Copyright (C) 1998-2000, Blair Zajac.
+
 package Proc::Background::Unix;
 
 require 5.004_04;
@@ -8,8 +12,8 @@ use Exporter;
 use Carp qw(cluck croak);
 use POSIX qw(:errno_h :sys_wait_h);
 
-$VERSION = do {my @r=(q$Revision: 0.02 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
 @ISA     = qw(Exporter);
+$VERSION = substr q$Revision: 0.03 $, 10;
 
 # Start the background process.  If it is started sucessfully, then record
 # the process id in $self->{_os_obj}.
@@ -29,17 +33,15 @@ sub new {
     if ($pid = fork()) {
       # parent
       $self->{_os_obj} = $pid;
+      $self->{_pid}    = $pid;
       last;
-    }
-    elsif (defined $pid) {
+    } elsif (defined $pid) {
       # child
       exec @_ or croak "$0: exec failed: $!\n";
-    }
-    elsif ($! == EAGAIN) {
+    } elsif ($! == EAGAIN) {
       sleep 5;
       redo;
-    }
-    else {
+    } else {
       return;
     }
   }

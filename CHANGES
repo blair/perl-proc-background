@@ -1,11 +1,24 @@
+Wed Apr 19 19:50:51 PDT 2000 <blair@akamai.com> (Blair Zajac)
+
+	Release version 0.03.
+
+Wed Apr 19 14:47:58 PDT 2000 <blair@akamai.com> (Blair Zajac)
+
+	Relax the requirement that the path to the program has to be
+	absolute.  If it is not absolute, then look for the absolute
+	location of the program.
+
+	Add a new method named pid that returns the process ID of the
+	new process.
+
 Sun Jun 28 12:43:39 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
 
 	Release version 0.02.
 
 Tue Jun 23 15:13:13 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
 
-	Restructure the die method.  Keep the OS independent code
-	for killing a process in Proc::Background and the OS dependent
+	Restructure the die method.  Keep the OS independent code for
+	killing a process in Proc::Background and the OS dependent
 	killing code in Proc::Background::*.
 
 	Update the POD for Proc::Background to be more explicit about
@@ -25,8 +38,8 @@ Thu Jun 18 14:52:01 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
 
 	Fix the implementation documentation.
 
-	Remove Proc::Background::Win32::alive since Proc::Background::alive
-	works.
+	Remove Proc::Background::Win32::alive since
+	Proc::Background::alive works.
 
 Thu Apr 24 12:00:00 PDT 1998 <blair@gps.caltech.edu> (Blair Zajac)
 

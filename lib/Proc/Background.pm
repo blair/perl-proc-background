@@ -1,3 +1,7 @@
+# Proc::Background: Generic interface to background process management.
+#
+# Copyright (C) 1998-2000, Blair Zajac.
+
 package Proc::Background;
 
 require 5.004_04;
@@ -6,15 +10,35 @@ use strict;
 use vars qw(@ISA $VERSION @EXPORT_OK);
 use Exporter;
 use Carp qw(cluck);
+use Cwd;
 
-$VERSION = do {my @r=(q$Revision: 0.02 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
+$VERSION   = substr q$Revision: 0.03 $, 10;
+
+# Determine if the operating system is Windows.
+my $is_windows = $^O eq 'MSWin32';
+
+# Set up a regular expression that tests if the path is absolute and
+# if it has a directory separator in it.  Also create a list of file
+# extensions of append to the programs name to look for the real
+# executable.
+my $is_absolute_re;
+my $has_dir_element_re;
+my @extensions = ('');
+if ($is_windows) {
+  $is_absolute_re     = "^(?:(?:[a-zA-Z]:[\\\\/])|(?:[\\\\/]{2}\w+[\\\\/]))";
+  $has_dir_element_re = "[\\\\/]";
+  push(@extensions, '.exe');
+} else {
+  $is_absolute_re     = "^/";
+  $has_dir_element_re = "/";
+}
 
 # Make this class a subclass of Proc::Win32 or Proc::Unix.  Any
 # unresolved method calls will go to either of these classes.
 OS: {
-  if ($^O eq 'MSWin32') {
+  if ($is_windows) {
     require Proc::Background::Win32;
     unshift(@ISA, 'Proc::Background::Win32');
     last OS;
@@ -24,8 +48,8 @@ OS: {
   last OS;
 }
 
-# We want the created object to live in Proc::Background instead of the
-# OS specific class so that generic method calls can be used.
+# We want the created object to live in Proc::Background instead of
+# the OS specific class so that generic method calls can be used.
 sub new {
   my $class = shift;
 
@@ -33,6 +57,61 @@ sub new {
     cluck "$class::new called with insufficient number of arguments";
     return;
   }
+
+  return unless $_[0];
+
+  # Make the path to the progam absolute if it isn't already.  If the
+  # path is not absolute and if the path contains a directory element
+  # separator, then only prepend the current working to it.  If the
+  # path is not absolute, then look through the PATH environment to
+  # find the program.  In all cases, look for the programs with any
+  # extensions added to the original path name.
+  my $path;
+  if ($_[0] =~ /$is_absolute_re/o) {
+    foreach my $ext (@extensions) {
+      my $p = "$_[0]$ext";
+      if (-x $p) {
+        $path = $p;
+        last;
+      }
+    }
+    unless (-x $path) {
+      warn "$0: no executable program located at $_[0]\n";
+      return;
+    }
+  } else {
+    my $cwd = cwd;
+    if ($_[0] =~ /$has_dir_element_re/o) {
+      my $p1 = "$cwd/$_[0]";
+      foreach my $ext (@extensions) {
+        my $p2 = "$p1$ext";
+        if (-x $p2) {
+          $path = $p2;
+          last;
+        }
+      }
+    } else {
+      foreach my $dir (split($is_windows ? ';' : ':', $ENV{PATH})) {
+        next unless $dir;
+        $dir = "$cwd/$dir" unless $dir =~ /$is_absolute_re/o;
+        my $p1 = "$dir/$_[0]";
+        foreach my $ext (@extensions) {
+          my $p2 = "$p1$ext";
+          if (-x $p2) {
+            $path = $p2;
+            last;
+          }
+        }
+        last if $path;
+      }
+    }
+    unless ($path) {
+      warn "$0: cannot find absolute location of $_[0]\n";
+      return;
+    }
+  }
+
+  splice(@_, 0, 1, $path);
 
   my $self = $class->SUPER::new(@_) or return;
 
@@ -49,7 +128,7 @@ sub new {
 # class return of _reap.  Return 1 if we sucessfully waited, 0
 # otherwise.
 sub _reap {
-  my $self = shift;
+  my $self    = shift;
   my $timeout = shift || 0;
 
   return 0 unless exists($self->{_os_obj});
@@ -115,15 +194,15 @@ sub die {
 }
 
 sub start_time {
-  my $self = shift;
-
-  $self->{_start_time};
+  $_[0]->{_start_time};
 }
 
 sub end_time {
-  my $self = shift;
+  $_[0]->{_end_time};
+}
 
-  $self->{_end_time};
+sub pid {
+  $_[0]->{_pid};
 }
 
 sub timeout_system {
@@ -167,8 +246,9 @@ Proc::Background - Generic interface to Unix and Win32 background process manage
 =head1 DESCRIPTION
 
 This is a generic interface to place programs in background processing
-on both Unix and Win32 platforms.  This class lets you start, kill, wait
-on, retrieve exit values, and see if background processes are alive.
+on both Unix and Win32 platforms.  This class lets you start, kill,
+wait on, retrieve exit values, and see if background processes are
+alive.
 
 =head1 METHODS
 
@@ -176,11 +256,16 @@ on, retrieve exit values, and see if background processes are alive.
 
 =item B<new> I<path> [I<arg>, [I<arg>, ...]]
 
-This creates a new background process.  The complete pathname to the
-executable must be passed as the first argument to this method.  This
-is required for compatibility for running programs on Win32 platform.
-If anything fails, then new returns an empty list in a list context, an
-undefined value in a scalar context, or nothing in a void context.
+This creates a new background process.  If the path to the program is
+not an asolute path, then B<new> will attempt to find the program in
+the current PATH environmental variable.  If anything fails, then new
+returns an empty list in a list context, an undefined value in a
+scalar context, or nothing in a void context.
+
+=item B<pid>
+
+Returns the process ID of the created process.  This value is saved
+even if the process has already finished.
 
 =item B<alive>
 
@@ -191,8 +276,8 @@ Return 1 if the process is still active, 0 otherwise.
 Reliably try to kill the process.  Returns 1 if the process no longer
 exists once I<die> has completed, 0 otherwise.  This will also return
 1 if the process has already died.  On Unix, the following signals are
-sent to the process in one second intervals until the process
-dies: HUP, QUIT, INT, KILL.
+sent to the process in one second intervals until the process dies:
+HUP, QUIT, INT, KILL.
 
 =item B<wait>
 
@@ -200,19 +285,19 @@ Wait for the process to exit.  Return the exit status of the program
 as returned by I<wait>() on the system.  To get the actual exit value,
 divide by 256, regardless of the operating system being used.  If the
 process never existed, then return an empty list in a list context, an
-undefined value in a scalar context, or nothing in a void context.  This
-function may be called multiple times even after the process has exited
-and it will return the same exit status.
+undefined value in a scalar context, or nothing in a void context.
+This function may be called multiple times even after the process has
+exited and it will return the same exit status.
 
 =item B<start_time>
 
-Return the value that the Perl function I<time>() returned when the process
-was started.
+Return the value that the Perl function I<time>() returned when the
+process was started.
 
 =item B<end_time>
 
-Return the value that the Perl function I<time>() returned when the exit
-status was obtained from the process.
+Return the value that the Perl function I<time>() returned when the
+exit status was obtained from the process.
 
 =back
 
@@ -224,12 +309,13 @@ status was obtained from the process.
 
 Run a command for I<timeout> seconds and if the process did not exit,
 then kill it.  The location of the program must be used passed in
-I<path>.  While the timeout is implemented using I<sleep>(), this function
-makes sure that the full I<timeout> is reached before I<kill>ing the process.
-The return is the exit status returned from the I<wait>() call.  To get
-the actual exit value, divide by 256.  If something failed in the creation
-of the process, it returns an empty list in a list context, an undefined
-value in a scalar context, or nothing in a void context.
+I<path>.  While the timeout is implemented using I<sleep>(), this
+function makes sure that the full I<timeout> is reached before
+I<kill>ing the process.  The return is the exit status returned from
+the I<wait>() call.  To get the actual exit value, divide by 256.  If
+something failed in the creation of the process, it returns an empty
+list in a list context, an undefined value in a scalar context, or
+nothing in a void context.
 
 =back
 
@@ -238,27 +324,29 @@ value in a scalar context, or nothing in a void context.
 I<Proc::Background> comes with two packages, I<Proc::Background::Unix>
 and I<Proc::Background::Win32>.  Currently, on the Unix platform
 I<Proc::Background> it uses the I<Proc::Background::Unix> class and on
-the Win32 platform I<Proc::Win32>, which makes use of I<Win32::Process>,
-is used.
+the Win32 platform I<Proc::Win32>, which makes use of
+I<Win32::Process>, is used.
 
 The I<Proc::Background> is package that just assigns to @ISA either
-I<Proc::Unix> or I<Proc::Win32>, which does the OS dependent work.  The
-OS independent work is done in I<Proc::Background>.
+I<Proc::Unix> or I<Proc::Win32>, which does the OS dependent work.
+The OS independent work is done in I<Proc::Background>.
 
-Use two variables to keep track of the process.  $self->{_os_obj} contains
-the operating system object to reference the process.  On a Unix systems
-this is the process id (pid).  On Win32, it is an object returned from
-the I<Win32::Process> class.  When $self->{_os_obj} exists, then the program
-is running.  When the program dies, this is recorded by deleting
-$self->{_os_obj} and saving the exit value $self->{_exit_value}.
+Use two variables to keep track of the process.  $self->{_os_obj}
+contains the operating system object to reference the process.  On a
+Unix systems this is the process id (pid).  On Win32, it is an object
+returned from the I<Win32::Process> class.  When $self->{_os_obj}
+exists, then the program is running.  When the program dies, this is
+recorded by deleting $self->{_os_obj} and saving the exit value
+$self->{_exit_value}.
 
-Anytime I<alive>() is called, a I<waitpid>() is called on the process and
-the return status, if any, is gathered and saved for a call to
+Anytime I<alive>() is called, a I<waitpid>() is called on the process
+and the return status, if any, is gathered and saved for a call to
 I<wait>().  This module does not install a signal handler for SIGCHLD.
-If for some reason, the user has installed a signal handler for SIGCHLD,
-then, then when this module calls I<waitpid>(), the failure will be noticed
-and taken as the exited child, but it won't be able to gather the exit
-status.  In this case, the exit status will be set to 0.
+If for some reason, the user has installed a signal handler for
+SIGCHLD, then, then when this module calls I<waitpid>(), the failure
+will be noticed and taken as the exited child, but it won't be able to
+gather the exit status.  In this case, the exit status will be set to
+0.
 
 =head1 SEE ALSO
 
@@ -271,8 +359,8 @@ Blair Zajac <blair@gps.caltech.edu>
 
 =head1 COPYRIGHT
 
-Copyright (c) 1998 Blair Zajac. All rights reserved.  This package is
-free software; you can redistribute it and/or modify it under the same
-terms as Perl itself.
+Copyright (c) 1998-2000 Blair Zajac.  All rights reserved.  This
+package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
 
 =cut

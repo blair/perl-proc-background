@@ -1,19 +1,23 @@
+# Proc::Background::Win32 Windows interface to background process management.
+#
+# Copyright (C) 1998-2000, Blair Zajac.
+
 package Proc::Background::Win32;
 
 require 5.004_04;
-
-BEGIN {
-  eval "use Win32::Process";
-  $@ and die "Proc::Background::Win32 needs Win32::Process from libwin32-?.??.zip to run.\n";
-}
 
 use strict;
 use vars qw(@ISA $VERSION);
 use Exporter;
 use Carp qw(cluck);
 
-$VERSION = do {my @r=(q$Revision: 0.02 $=~/\d+/g);sprintf "%d."."%02d"x$#r,@r};
+BEGIN {
+  eval "use Win32::Process";
+  $@ and die "Proc::Background::Win32 needs Win32::Process from libwin32-?.??.zip to run.\n";
+}
+
 @ISA     = qw(Exporter);
+$VERSION = substr q$Revision: 0.03 $, 10;
 
 sub new {
   my $class = shift;
@@ -23,41 +27,40 @@ sub new {
     return;
   }
 
-  my $program = shift;
-  if (!-x $program) {
-    if (-x "$program.exe") {
-      $program .= ".exe";
-    }
-    else {
-      cluck "$program not found or is not executable.\n";
-      return;
-    }
-  }
+  my ($program, @args) = @_;
 
   my $self = bless {}, $class;
 
+  # If an argument contains any characters that require protecting
+  # since the command is converted into a single string, quote it.
+  for (my $i=0; $i<@args; ++$i) {
+    if (index($args[$i], ' ') != -1) {
+        $args[$i] = "\"$args[$i]\"";
+    }
+  }
+
   # Perl 5.004_04 cannot do Win32::Process::Create on a nonexistant
   # hash key.
-  $self->{_os_obj} = 0;
+  my $os_obj = 0;
 
   # Create the process.
-  if (Win32::Process::Create($self->{_os_obj},
+  if (Win32::Process::Create($os_obj,
 			     $program,
-			     "$program @_",
+			     "$program @args",
 			     0,
 			     NORMAL_PRIORITY_CLASS,
 			     '.')) {
+    $self->{_pid}    = $os_obj->GetProcessID;
+    $self->{_os_obj} = $os_obj;
     return $self;
-  }
-  else {
+  } else {
     return;
   }
 }
 
 # Reap the child.
 sub _waitpid {
-  my $self = shift;
-  my $timeout = shift;
+  my ($self, $timeout) = @_;
 
   # Try to wait on the process.
   my $result = $self->{_os_obj}->Wait($timeout ? INFINITE : 0);
