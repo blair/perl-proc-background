@@ -1,6 +1,6 @@
 # Proc::Background: Generic interface to background process management.
 #
-# Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.
+# Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.
 
 package Proc::Background;
 
@@ -14,7 +14,7 @@ use Cwd;
 use vars qw(@ISA $VERSION @EXPORT_OK);
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
-$VERSION   = sprintf '%d.%02d', '$Revision: 1.06 $' =~ /(\d+)\.(\d+)/;
+$VERSION   = sprintf '%d.%02d', '$Revision: 1.07 $' =~ /(\d+)\.(\d+)/;
 
 # Determine if the operating system is Windows.
 my $is_windows = $^O eq 'MSWin32';
@@ -50,7 +50,7 @@ if ($is_windows) {
 sub _resolve_path {
   my $command = shift;
 
-  return unless $command;
+  return unless length $command;
 
   # Make the path to the progam absolute if it isn't already.  If the
   # path is not absolute and if the path contains a directory element
@@ -62,12 +62,12 @@ sub _resolve_path {
   if ($command =~ /$is_absolute_re/o) {
     foreach my $ext (@extensions) {
       my $p = "$command$ext";
-      if (-x $p) {
+      if (-f $p and -x _) {
         $path = $p;
         last;
       }
     }
-    unless ($path) {
+    unless (defined $path) {
       warn "$0: no executable program located at $command\n";
     }
   } else {
@@ -76,27 +76,27 @@ sub _resolve_path {
       my $p1 = "$cwd/$command";
       foreach my $ext (@extensions) {
         my $p2 = "$p1$ext";
-        if (-x $p2) {
+        if (-f $p2 and -x _) {
           $path = $p2;
           last;
         }
       }
     } else {
       foreach my $dir (split($is_windows ? ';' : ':', $ENV{PATH})) {
-        next unless $dir;
+        next unless length $dir;
         $dir = "$cwd/$dir" unless $dir =~ /$is_absolute_re/o;
         my $p1 = "$dir/$command";
         foreach my $ext (@extensions) {
           my $p2 = "$p1$ext";
-          if (-x $p2) {
+          if (-f $p2 and -x _) {
             $path = $p2;
             last;
           }
         }
-        last if $path;
+        last if defined $path;
       }
     }
-    unless ($path) {
+    unless (defined $path) {
       warn "$0: cannot find absolute location of $command\n";
     }
   }
@@ -118,7 +118,7 @@ sub new {
     confess "Proc::Background::new called with insufficient number of arguments";
   }
 
-  return unless $_[0];
+  return unless defined $_[0];
 
   my $self = $class->SUPER::_new(@_) or return;
 
@@ -470,7 +470,7 @@ Blair Zajac <blair@orcaware.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.  This
+Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 

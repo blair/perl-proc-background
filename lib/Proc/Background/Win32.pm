@@ -1,6 +1,6 @@
 # Proc::Background::Win32 Windows interface to background process management.
 #
-# Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.
+# Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.
 
 package Proc::Background::Win32;
 
@@ -12,9 +12,11 @@ use Carp;
 
 use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = sprintf '%d.%02d', '$Revision: 1.06 $' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf '%d.%02d', '$Revision: 1.07 $' =~ /(\d+)\.(\d+)/;
 
 BEGIN {
+  eval "use Win32";
+  $@ and die "Proc::Background::Win32 needs Win32 from libwin32-?.??.zip to run.\n";
   eval "use Win32::Process";
   $@ and die "Proc::Background::Win32 needs Win32::Process from libwin32-?.??.zip to run.\n";
 }
@@ -26,7 +28,7 @@ sub _new {
     confess "Proc::Background::Win32::_new called with insufficient number of arguments";
   }
 
-  return unless $_[0];
+  return unless defined $_[0];
 
   # If there is only one element in the @_ array, then just split the
   # argument by whitespace.  If there is more than one element in @_,
@@ -56,7 +58,14 @@ sub _new {
       $args[$i] = $arg;
     }
   }
+
+  # Find the absolute path to the program.  If it cannot be found,
+  # then return.  To work around a problem where
+  # Win32::Process::Create cannot start a process when the full
+  # pathname has a space in it, convert the full pathname to the
+  # Windows short 8.3 format which contains no spaces.
   $args[0] = Proc::Background::_resolve_path($args[0]) or return;
+  $args[0] = Win32::GetShortPathName($args[0]);
 
   my $self = bless {}, $class;
 
@@ -141,7 +150,7 @@ Blair Zajac <blair@orcaware.com
 
 =head1 COPYRIGHT
 
-Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.  This
+Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 

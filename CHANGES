@@ -1,3 +1,35 @@
+Sat Apr 20 19:27:53 PDT 2002 <blair@orcaware.com> Blair Zajac
+
+	* Release version 1.07.
+
+Sat Apr 20 18:55:46 PDT 2002 <blair@orcaware.com> Blair Zajac
+
+	* lib/Proc/Background/Win32.pm: Fix a bug spotted by John
+	  Kingsley <johnk@magma.ca> on Windows platforms where if
+	  Proc::Background->new is passed an absolute pathname to a
+	  program containing whitespace, then Win32::Process::Create
+	  will not be able to create the new process.  The solution is
+	  use Win32::GetShortPathName to convert the long pathname
+	  into a short pathname with no spaces.  Also eval "use
+	  Win32' to load Win32::GetShortPathName.
+
+Sat Apr 20 18:35:57 PDT 2002 <blair@orcaware.com> Blair Zajac
+
+	* lib/Proc/Background.pm: Fix a bug spotted by Ruben Diez
+	  <rdiez@activenav.com> in _resolve_path where if one of the
+	  directories in the PATH had a directory with the same name
+	  as the program being searched for, the directory would be
+	  used because they typically have execute permissions.  Now
+	  check for a file and the execute permissions before using
+	  the file.
+
+Sat Apr 20 18:19:27 PDT 2002 <blair@orcaware.com> Blair Zajac
+
+	* lib/Proc/Background.pm: Fix all cases where a string
+	  containing '0' would fail a test even though it should pass.
+	* lib/Proc/Background/Unix.pm: Ditto.
+	* lib/Proc/Background/Win32.pm: Ditto.
+
 Sat Sep  8 12:20:01 PDT 2001 <blair@orcaware.com> Blair Zajac
 
 	* Release version 1.06.

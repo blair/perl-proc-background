@@ -1,6 +1,6 @@
 # Proc::Background::Unix: Unix interface to background process management.
 #
-# Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.
+# Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.
 
 package Proc::Background::Unix;
 
@@ -13,7 +13,7 @@ use POSIX qw(:errno_h :sys_wait_h);
 
 use vars qw(@ISA $VERSION);
 @ISA     = qw(Exporter);
-$VERSION = sprintf '%d.%02d', '$Revision: 1.06 $' =~ /(\d+)\.(\d+)/;
+$VERSION = sprintf '%d.%02d', '$Revision: 1.07 $' =~ /(\d+)\.(\d+)/;
 
 # Start the background process.  If it is started sucessfully, then record
 # the process id in $self->{_os_obj}.
@@ -24,7 +24,7 @@ sub _new {
     confess "Proc::Background::Unix::_new called with insufficient number of arguments";
   }
 
-  return unless $_[0];
+  return unless defined $_[0];
 
   # If there is only one element in the @_ array, then it may be a
   # command to be passed to the shell and should not be checked, in
@@ -131,7 +131,7 @@ Blair Zajac <blair@orcaware.com>
 
 =head1 COPYRIGHT
 
-Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.  This
+Copyright (C) 1998-2002 Blair Zajac.  All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
