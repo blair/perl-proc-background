@@ -13,7 +13,7 @@ use Carp qw(cluck croak);
 use POSIX qw(:errno_h :sys_wait_h);
 
 @ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.00 $, 10;
+$VERSION = substr q$Revision: 1.01 $, 10;
 
 # Start the background process.  If it is started sucessfully, then record
 # the process id in $self->{_os_obj}.
@@ -26,7 +26,7 @@ sub new {
   }
 
   my $self = bless {}, $class;
-  
+
   # Fork a child process.
   my $pid;
   {

@@ -1,4 +1,4 @@
-Package Proc::Generic Version 1.00
+Package Proc::Generic Version 1.01
 
 This is the Proc::Generic package.  It provides a generic interface to
 running background processes.  Through this interface, users can run
@@ -28,7 +28,7 @@ so it does not need to be installed.
 AVAILABILITY
 
 The latest version of this package is available from a CPAN
-archive near you in CPAN/authors/id/B/BZ/BZAJAC/Proc-Background-0.03.tar.gz
+archive near you in CPAN/authors/id/B/BZ/BZAJAC/Proc-Background-1.01.tar.gz
 or from the author by contacting Blair Zajac <blair@akamai.com>.
 
 INSTALLATION

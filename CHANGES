@@ -1,3 +1,19 @@
+Wed Jun 21 09:51:37 PDT 2000 <blair@akamai.com> (Blair Zajac)
+
+	Release version 1.01.
+
+Wed Jun 21 09:47:33 PDT 2000 <blair@akamai.com> (Blair Zajac)
+
+	Proc::Background::Win32 used to only protect arguments that
+	contained he space character by placing "'s around the
+	argument.  Now, make sure that each individual argument to
+	Proc::Backgrond ends up going to the Windows shell in such a
+	way that the shell sees the argument as a single argument.
+	This means escaping "'s that are not already escaped and
+	placing "'s around the argument if it matches \s.  This will
+	protect the string if it finds a \s in it and not just a
+	space.
+
 Thu Apr 20 14:46:31 PDT 2000 <blair@akamai.com> (Blair Zajac)
 
 	Release version 1.00.

@@ -17,7 +17,7 @@ BEGIN {
 }
 
 @ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.00 $, 10;
+$VERSION = substr q$Revision: 1.01 $, 10;
 
 sub new {
   my $class = shift;
@@ -31,12 +31,23 @@ sub new {
 
   my $self = bless {}, $class;
 
-  # If an argument contains any characters that require protecting
-  # since the command is converted into a single string, quote it.
+  # Assume that each argument should be properly protected from the
+  # shell, just as it would be in a Unix environment, so that it
+  # appears to the shell as a single argument.  First, make sure that
+  # any arguments that are already protected stay protected.  Then
+  # convert unquoted "'s into \"'s.  Finally, check for whitespace and
+  # protect it.
   for (my $i=0; $i<@args; ++$i) {
-    if (index($args[$i], ' ') != -1) {
-        $args[$i] = "\"$args[$i]\"";
+    my $arg = $args[$i];
+    $arg =~ s#\\\\#\200#g;
+    $arg =~ s#\\"#\201#g;
+    $arg =~ s#"#\\"#g;
+    $arg =~ s#\200#\\\\#g;
+    $arg =~ s#\201#\\"#g;
+    if ($arg =~ /\s/) {
+      $arg = "\"$arg\"";
     }
+    $args[$i] = $arg;
   }
 
   # Perl 5.004_04 cannot do Win32::Process::Create on a nonexistant

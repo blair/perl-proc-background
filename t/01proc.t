@@ -52,8 +52,17 @@ if ($p1) {
   ok(0);							# 5
 }
 
-# Test alive, wait, and die on already dead process.
-my $p2 = EmptySubclass->new($^X, $sleep_exit, 2, 5);
+# Test alive, wait, and die on already dead process.  Also pass some
+# bogus command line options to the program to make sure that the
+# argument protecting code for Windows does not cause the shell any
+# confusion.
+my $p2 = EmptySubclass->new($^X,
+                            $sleep_exit,
+                            2,
+                            5,
+                            "\t",
+                            '"',
+                            '\" 10 \\" \\\\"');
 ok($p2);							# 6
 if ($p2) {
   ok($p2->alive);						# 7

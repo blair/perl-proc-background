@@ -14,7 +14,7 @@ use Cwd;
 
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
-$VERSION   = substr q$Revision: 1.00 $, 10;
+$VERSION   = substr q$Revision: 1.01 $, 10;
 
 # Determine if the operating system is Windows.
 my $is_windows = $^O eq 'MSWin32';

@@ -1,6 +1,6 @@
 $| = 1;
 
-my $sleep = shift || 1;
+my $sleep       = shift || 1;
 my $exit_status = shift || 0;
 
 if ($ENV{VERBOSE}) {
