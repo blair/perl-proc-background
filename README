@@ -1,4 +1,4 @@
-Package Proc::Generic Version 1.01
+Package Proc::Generic Version 1.02
 
 This is the Proc::Generic package.  It provides a generic interface to
 running background processes.  Through this interface, users can run
@@ -28,8 +28,13 @@ so it does not need to be installed.
 AVAILABILITY
 
 The latest version of this package is available from a CPAN
-archive near you in CPAN/authors/id/B/BZ/BZAJAC/Proc-Background-1.01.tar.gz
-or from the author by contacting Blair Zajac <blair@akamai.com>.
+archive near you in
+
+	CPAN/authors/id/B/BZ/BZAJAC/Proc-Background-1.02.tar.gz
+
+or at
+
+	ftp://ftp.gps.caltech.edu/pub/blair/Perl/
 
 INSTALLATION
 
@@ -76,6 +81,6 @@ utility to extract documentation from the module files directly.
 
 COPYRIGHT
 
-Copyright (c) 1998-2000 Blair Zajac. All rights reserved.  This
+Copyright (C) 1998-2001 Blair Zajac. All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.

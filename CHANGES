@@ -1,3 +1,22 @@
+Mon Jan 15 16:05:04 PST 2001 <blair@akamai.com> (Blair Zajac)
+
+        Release version 1.02.
+
+Mon Jan 15 10:32:59 PST 2001 <blair@akamai.com> (Blair Zajac)
+
+	Make Proc::Background::new flexible enough to behave in the
+	same manner as exec() or system() do when passed either a
+	single or multiple arguments.  When the command to put in the
+	background run is passed as an array with two or more
+	elements, run the command directly without passing the command
+	through the shell.  When a single argument is passed to
+	Proc::Background::new, pass the command through the shell.
+	Add a new test to the test suite to check a command passed as
+	a single argument to Proc::Background::new.
+
+	Remove 'Unrecognized escape \w passed through at Background.pm
+	line 30' warning when using Perl 5.6.0.
+
 Wed Jun 21 09:51:37 PDT 2000 <blair@akamai.com> (Blair Zajac)
 
 	Release version 1.01.

@@ -1,6 +1,6 @@
 # Proc::Background: Generic interface to background process management.
 #
-# Copyright (C) 1998-2000, Blair Zajac.
+# Copyright (C) 1998-2001 Blair Zajac.
 
 package Proc::Background;
 
@@ -14,7 +14,7 @@ use Cwd;
 
 @ISA       = qw(Exporter);
 @EXPORT_OK = qw(timeout_system);
-$VERSION   = substr q$Revision: 1.01 $, 10;
+$VERSION   = substr q$Revision: 1.02 $, 10;
 
 # Determine if the operating system is Windows.
 my $is_windows = $^O eq 'MSWin32';
@@ -27,7 +27,7 @@ my $is_absolute_re;
 my $has_dir_element_re;
 my @extensions = ('');
 if ($is_windows) {
-  $is_absolute_re     = "^(?:(?:[a-zA-Z]:[\\\\/])|(?:[\\\\/]{2}\w+[\\\\/]))";
+  $is_absolute_re     = '^(?:(?:[a-zA-Z]:[\\\\/])|(?:[\\\\/]{2}\w+[\\\\/]))';
   $has_dir_element_re = "[\\\\/]";
   push(@extensions, '.exe');
 } else {
@@ -48,6 +48,65 @@ OS: {
   last OS;
 }
 
+# Take either a relative or absolute path to a program and make it an
+# absolute path.
+sub _resolve_path {
+  my $command = shift;
+
+  return unless $command;
+
+  # Make the path to the progam absolute if it isn't already.  If the
+  # path is not absolute and if the path contains a directory element
+  # separator, then only prepend the current working to it.  If the
+  # path is not absolute, then look through the PATH environment to
+  # find the program.  In all cases, look for the programs with any
+  # extensions added to the original path name.
+  my $path;
+  if ($command =~ /$is_absolute_re/o) {
+    foreach my $ext (@extensions) {
+      my $p = "$command$ext";
+      if (-x $p) {
+        $path = $p;
+        last;
+      }
+    }
+    unless ($path) {
+      warn "$0: no executable program located at $command\n";
+    }
+  } else {
+    my $cwd = cwd;
+    if ($command =~ /$has_dir_element_re/o) {
+      my $p1 = "$cwd/$command";
+      foreach my $ext (@extensions) {
+        my $p2 = "$p1$ext";
+        if (-x $p2) {
+          $path = $p2;
+          last;
+        }
+      }
+    } else {
+      foreach my $dir (split($is_windows ? ';' : ':', $ENV{PATH})) {
+        next unless $dir;
+        $dir = "$cwd/$dir" unless $dir =~ /$is_absolute_re/o;
+        my $p1 = "$dir/$command";
+        foreach my $ext (@extensions) {
+          my $p2 = "$p1$ext";
+          if (-x $p2) {
+            $path = $p2;
+            last;
+          }
+        }
+        last if $path;
+      }
+    }
+    unless ($path) {
+      warn "$0: cannot find absolute location of $command\n";
+    }
+  }
+
+  $path;
+}
+
 # We want the created object to live in Proc::Background instead of
 # the OS specific class so that generic method calls can be used.
 sub new {
@@ -60,59 +119,7 @@ sub new {
 
   return unless $_[0];
 
-  # Make the path to the progam absolute if it isn't already.  If the
-  # path is not absolute and if the path contains a directory element
-  # separator, then only prepend the current working to it.  If the
-  # path is not absolute, then look through the PATH environment to
-  # find the program.  In all cases, look for the programs with any
-  # extensions added to the original path name.
-  my $path;
-  if ($_[0] =~ /$is_absolute_re/o) {
-    foreach my $ext (@extensions) {
-      my $p = "$_[0]$ext";
-      if (-x $p) {
-        $path = $p;
-        last;
-      }
-    }
-    unless (-x $path) {
-      warn "$0: no executable program located at $_[0]\n";
-      return;
-    }
-  } else {
-    my $cwd = cwd;
-    if ($_[0] =~ /$has_dir_element_re/o) {
-      my $p1 = "$cwd/$_[0]";
-      foreach my $ext (@extensions) {
-        my $p2 = "$p1$ext";
-        if (-x $p2) {
-          $path = $p2;
-          last;
-        }
-      }
-    } else {
-      foreach my $dir (split($is_windows ? ';' : ':', $ENV{PATH})) {
-        next unless $dir;
-        $dir = "$cwd/$dir" unless $dir =~ /$is_absolute_re/o;
-        my $p1 = "$dir/$_[0]";
-        foreach my $ext (@extensions) {
-          my $p2 = "$p1$ext";
-          if (-x $p2) {
-            $path = $p2;
-            last;
-          }
-        }
-        last if $path;
-      }
-    }
-    unless ($path) {
-      warn "$0: cannot find absolute location of $_[0]\n";
-      return;
-    }
-  }
-
-  shift;
-  my $self = $class->SUPER::new($path, @_) or return;
+  my $self = $class->SUPER::_new(@_) or return;
 
   # Save the start time of the class.
   $self->{_start_time} = time;
@@ -234,32 +241,85 @@ Proc::Background - Generic interface to Unix and Win32 background process manage
 =head1 SYNOPSIS
 
     use Proc::Background;
-    timeout_system('seconds', 'path_to_program', 'arg1');
-    my $proc = Proc::Background->new('path_to_program', 'arg1', 'arg2');
-    $proc->alive;
-    $proc->die;
-    $proc->wait;
-    $time = $proc->start_time;
-    $time = $proc->end_time;
+    timeout_system($seconds, $path_to_program, $arg1);
+    timeout_system($seconds, "$path_to_program $arg1");
+    my $proc1 = Proc::Background->new($path_to_program, $arg1, $arg2);
+    my $proc2 = Proc::Background->new("$path_to_program $arg1 1>&2");
+    $proc1->alive;
+    $proc1->die;
+    $proc1->wait;
+    my $time1 = $proc1->start_time;
+    my $time2 = $proc1->end_time;
 
 =head1 DESCRIPTION
 
 This is a generic interface to place programs in background processing
 on both Unix and Win32 platforms.  This class lets you start, kill,
 wait on, retrieve exit values, and see if background processes are
-alive.
+still exist.
 
 =head1 METHODS
 
 =over 4
 
-=item B<new> I<path> [I<arg>, [I<arg>, ...]]
+=item B<new> I<path>, [I<arg>, [I<arg>, ...]]
 
-This creates a new background process.  If the path to the program is
-not an asolute path, then B<new> will attempt to find the program in
-the current PATH environmental variable.  If anything fails, then new
-returns an empty list in a list context, an undefined value in a
-scalar context, or nothing in a void context.
+=item B<new> 'I<path> [I<arg> [I<arg> ...]]'
+
+This creates a new background process.  As I<exec> or I<system> may be
+passed an array with a single single string element containing a
+command to be passed to the shell or an array with more than one
+element to be run without calling the shell, B<new> has the same
+behavior.
+
+In certain cases B<new> will attempt to find I<path> on the system and
+fail if it cannot be found.
+
+For Win32 operating systems:
+
+    The Win32::Process module is always used to spawn background
+    processes on the Win32 platform.  This module always takes a
+    single string argument containing the executable's name and
+    any option arguments.  In addition, it requires that the
+    absolute path to the executable is also passed to it.  If
+    only a single argument is passed to new, then it is split on
+    whitespace into an array and the first element of the split
+    array is used at the executable's name.  If multiple
+    arguments are passed to new, then the first element is used
+    as the executable's name.
+
+    If the executable's name is an absolute path, then new
+    checks to see if the executable exists in the given location
+    or fails otherwise.  If the executable's name is not
+    absolute, then the executable is searched for using the PATH
+    environmental variable.  The input executable name is always
+    replaced with the absolute path determined by this process.
+
+    In addition, when searching for the executable, the
+    executable is searched for using the unchanged executable
+    name and if that is not found, then it is checked by
+    appending `.exe' to the name in case the name was passed
+    without the `.exe' suffix.
+
+    Finally, the argument array is placed back into a single
+    string and passed to Win32::Process::Create.
+
+For non-Win32 operating systems, such as Unix:
+
+    If more than one argument is passed to new, then new
+    assumes that the command will not be passed through the
+    shell and the first argument is the executable's relative
+    or absolute path.  If the first argument is an absolute
+    path, then it is checked to see if it exists and can be
+    run, otherwise new fails.  If the path is not absolute,
+    then the PATH environmental variable is checked to see if
+    the executable can be found.  If the executable cannot be
+    found, then new fails.  These steps are taking to prevent
+    exec() from failing after an fork() without the caller of
+    new knowing that something failed.
+
+If anything fails, then new returns an empty list in a list context,
+an undefined value in a scalar context, or nothing in a void context.
 
 =item B<pid>
 
@@ -304,7 +364,9 @@ exit status was obtained from the process.
 
 =over 4
 
-=item B<timeout_system> I<timeout> I<path> [I<arg>, [I<arg>...]]
+=item B<timeout_system> I<timeout>, I<path>, [I<arg>, [I<arg>...]]
+
+=item B<timeout_system> 'I<timeout> I<path> [I<arg> [I<arg>...]]'
 
 Run a command for I<timeout> seconds and if the process did not exit,
 then kill it.  The location of the program must be used passed in
@@ -358,7 +420,7 @@ Blair Zajac <blair@gps.caltech.edu>
 
 =head1 COPYRIGHT
 
-Copyright (c) 1998-2000 Blair Zajac.  All rights reserved.  This
+Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.  This
 package is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 

@@ -4,7 +4,7 @@
 use strict;
 use vars qw($loaded);
 
-BEGIN { $| = 1; print "1..22\n"; }
+BEGIN { $| = 1; print "1..26\n"; }
 END   {print "not ok 1\n" unless $loaded; }
 
 my $ok_count = 1;
@@ -113,4 +113,18 @@ if ($p4) {
   ok(0);							# 20
   ok(0);							# 21
   ok(0);							# 22
+}
+
+# Test a command line entered as a single string.
+my $p5 = EmptySubclass->new("$^X $sleep_exit 2 26");
+ok($p5);							# 23
+if ($p5) {
+  ok($p5->alive);						# 24
+  sleep 3;
+  ok(!$p5->alive);						# 25
+  ok(($p5->wait >> 8) == 26);					# 26
+} else {
+  ok(0);							# 24
+  ok(0);							# 25
+  ok(0);							# 26
 }

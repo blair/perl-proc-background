@@ -1,6 +1,6 @@
 # Proc::Background::Unix: Unix interface to background process management.
 #
-# Copyright (C) 1998-2000, Blair Zajac.
+# Copyright (C) 1998-2001 Blair Zajac.
 
 package Proc::Background::Unix;
 
@@ -13,16 +13,31 @@ use Carp qw(cluck croak);
 use POSIX qw(:errno_h :sys_wait_h);
 
 @ISA     = qw(Exporter);
-$VERSION = substr q$Revision: 1.01 $, 10;
+$VERSION = substr q$Revision: 1.02 $, 10;
 
 # Start the background process.  If it is started sucessfully, then record
 # the process id in $self->{_os_obj}.
-sub new {
+sub _new {
   my $class = shift;
 
   unless (@_ > 0) {
-    cluck "$class::new called with insufficient number of arguments";
+    cluck "$class::_new called with insufficient number of arguments";
     return;
+  }
+
+  return unless $_[0];
+
+  # If there is only one element in the @_ array, then it may be a
+  # command to be passed to the shell and should not be checked, in
+  # case the command sets environmental variables in the beginning,
+  # i.e. 'VAR=arg ls -l'.  If there is more than one element in the
+  # array, then check that the first element is a valid executable
+  # that can be found through the PATH and find the absolute path to
+  # the executable.  If the executable is found, then replace the
+  # first element it with the absolute path.
+  my @args = @_;
+  if (@_ > 1) {
+    $args[0] = Proc::Background::_resolve_path($args[0]) or return;
   }
 
   my $self = bless {}, $class;
@@ -117,8 +132,8 @@ Blair Zajac <blair@gps.caltech.edu>
 
 =head1 COPYRIGHT
 
-Copyright (c) 1998 Blair Zajac. All rights reserved.  This package is
-free software; you can redistribute it and/or modify it under the same
-terms as Perl itself.
+Copyright (C) 1998-2001 Blair Zajac.  All rights reserved.  This
+package is free software; you can redistribute it and/or modify it
+under the same terms as Perl itself.
 
 =cut
