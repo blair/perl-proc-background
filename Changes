@@ -1,3 +1,7 @@
+Wed Jul  1 22:46:11 PDT 2009
+
+	* Release version 1.09.
+
 Wed Jul  1 22:36:06 PDT 2009
 
 	* Makefile.PL: Switch from die() to warn() if Win32::Process
