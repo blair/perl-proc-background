@@ -29,7 +29,7 @@ from a CPAN (Comprehensive Perl Archive Network) archive near you in
 The latest beta version of this package is hosted in a Subversion
 repository located at
 
-    http://www.orcaware.com/svn/repos/trunk/perl_proc_background/
+    http://www.orcaware.com/svn/repos/perl_proc_background/trunk/
 
 Subversion is an open-source source code management system designed to
 replace CVS.  To get Subversion, see
