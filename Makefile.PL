@@ -27,7 +27,7 @@ sub check_version
 # Check for needed modules.
 if ($^O eq 'MSWin32') {
   check_version('Win32::Process' => '0.04') or
-    die   "\n"
+    warn  "\n"
         . "*** For Proc:Background you require version 0.04, or later, of\n"
         . "    Win32::Process from CPAN/authors/id/GSAR/libwin32-x.x.tar.gz\n\n";
 }
