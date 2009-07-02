@@ -1,3 +1,13 @@
+Wed Jul  1 22:36:06 PDT 2009
+
+	* Makefile.PL: Switch from die() to warn() if Win32::Process
+	  isn't installed into a warning. When running under CPAN.pm,
+	  the die causes the install to fail before processing
+	  dependencies.  Reducing this to a warning means that CPAN
+	  will cleanly install Proc::Background and Win32::Process
+	  with no user intervention needed in strawberry perl or even
+	  ActiveState if you have a working make.
+
 Sat Dec  7 09:41:58 PST 2002
 
 	* Release version 1.08.
