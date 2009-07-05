@@ -1,3 +1,15 @@
+Sun Jul  5 15:15:12 PDT 2009
+
+	* Makefile.PL: Resolve
+	  https://rt.cpan.org/Ticket/Display.html?id=47100 by passing
+	  PREREQ_PM to WriteMakefile().
+	  Patch by: Tomas Doran <bobtfish@bobtfish.net>
+
+Wed Jul  1 22:58:13 PDT 2009
+
+	* README: Correct the URL to the Subversion repository for
+	  this project.
+
 Wed Jul  1 22:46:11 PDT 2009
 
 	* Release version 1.09.

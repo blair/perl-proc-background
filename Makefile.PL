@@ -3,6 +3,8 @@
 require 5.004_04;
 use strict;
 
+my %requires;
+
 # Subroutine to check for installed modules.
 sub check_version
 {
@@ -19,9 +21,11 @@ sub check_version
                                  : "not found";
   my $vnum = ${"${pkg}::VERSION"} || 0;
 
-  print $vnum >= $wanted ? "ok\n" : " " . $vstr . "\n";
+  my $ok = $vnum >= $wanted;
+  print $ok ? "ok\n" : " " . $vstr . "\n";
 
-  $vnum >= $wanted;
+  $requires{$pkg} = $wanted if !$ok;
+  return $ok;
 }
 
 # Check for needed modules.
@@ -60,4 +64,5 @@ WriteMakefile(
     'COMPRESS'  => 'gzip',
     'SUFFIX'    => 'gz'
   },
+  PREREQ_PM => \%requires,
 );
