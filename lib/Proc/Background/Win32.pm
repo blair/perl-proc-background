@@ -128,7 +128,7 @@ __END__
 
 =head1 NAME
 
-Proc::Background::Win32 - Interface to process mangement on Win32 systems
+Proc::Background::Win32 - Interface to process management on Win32 systems
 
 =head1 SYNOPSIS
 

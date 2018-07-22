@@ -277,7 +277,7 @@ Proc::Background - Generic interface to Unix and Win32 background process manage
     my $time2 = $proc1->end_time;
 
     # Add an option to kill the process with die when the variable is
-    # DETROYed.
+    # DESTROYed.
     my $opts  = {'die_upon_destroy' => 1};
     my $proc3 = Proc::Background->new($opts, $command, $arg1, $arg2);
     $proc3    = undef;

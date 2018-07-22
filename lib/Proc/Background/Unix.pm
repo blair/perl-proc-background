@@ -113,7 +113,7 @@ __END__
 
 =head1 NAME
 
-Proc::Background::Unix - Unix interface to process mangement
+Proc::Background::Unix - Unix interface to process management
 
 =head1 SYNOPSIS
 
